@@ -34,27 +34,31 @@ function main()
             var Max_connections = readVariable(host, "Max_connections").toInt();
     
             if (Max_used_connections == false ||
-               Max_connections == false)
+                Max_connections == false)
             {
                 msg = "Not enough data to calculate";
             }
             else
             {
                 var used = 100 * Max_used_connections / Max_connections;
-    
                 if (used > 90)
                 {
                     advice.setSeverity(1);
                     msg = ADVICE_WARNING;
-                    justification = used + "% of the connections have been used,"
-                        " which is > 90% of max_connections.";
+                                    justification = "During the lifetime, a peak of " 
+                                                            + used + "% connections"
+                                                            " have ever been used,"
+                                        " which is > 90% of max_connections.";
                 }
                 else
                 {
-                    justification = used + "% of the connections have been used,"
-                        " which is < 90% of max_connections.";
-                    advice.setSeverity(0);
-                    msg = ADVICE_OK;
+                                     justification = "During the lifetime, a peak of " 
+                                                             + used + "% connections"
+                                                             " have ever been used,"
+                                         " which is <= 90% of max_connections.";
+
+                                     advice.setSeverity(0);
+                                     msg = ADVICE_OK;
                 }
                 advice.setJustification(justification);
             }

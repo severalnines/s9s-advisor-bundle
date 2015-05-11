@@ -5,11 +5,11 @@
  */
 
 var WARNING_THRESHOLD=0;
-var TITLE="Connections used";
+var TITLE="Connections currently used";
 var ADVICE_WARNING="You are using more than 80% of the max_connections."
     " Consider regulating load, e.g by using HAProxy. Using up all connections"
     " may render the database server unusable.";
-var ADVICE_OK="The percentage of used connections is satisfactory." ;
+var ADVICE_OK="The percentage of currently used connections is satisfactory." ;
 
 function main()
 {
@@ -33,7 +33,7 @@ function main()
                 readVariable(host, "Max_connections").toInt();
     
             if (Threads_connected == false ||
-               Max_connections == false)
+                Max_connections == false)
             {
                 msg = "Not enough data to calculate";
             }
@@ -45,12 +45,12 @@ function main()
                 {
                     advice.setSeverity(1);
                     msg = ADVICE_WARNING;
-                    justification = used + "% of the connections have been used,"
+                    justification = used + "% of the connections is currently used,"
                         " which is > 90% of max_connections.";
                 }
                 else
                 {
-                    justification = used + "% of the connections have been used,"
+                    justification = used + "% of the connections is currently used,"
                         " which is < 90% of max_connections.";
                     advice.setSeverity(0);
                     msg = ADVICE_OK;
