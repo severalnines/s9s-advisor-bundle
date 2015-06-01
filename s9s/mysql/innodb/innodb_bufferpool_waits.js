@@ -24,9 +24,18 @@ function main()
         map         = host.toMap();
         connected     = map["connected"];
         var advice = new CmonAdvice();
-
+        var justification = "";
+        var msg = "";
+       
+        print("   ");
+        print(host);
+        print("==========================");
+        
         if (!connected)
+        {
+            print("Not connected");
             continue;
+        }
         if (checkPrecond(host))
         {
             var Innodb_buffer_pool_wait_free =
@@ -52,17 +61,21 @@ function main()
                 msg = ADVICE_OK;
 
             }
-            advice.setJustification(justification);
         }
         else
         {
             msg = "Not enough data to calculate";
+            justification = msg;
             advice.setSeverity(0);
         }
         advice.setHost(host);
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
+        advice.setJustification(justification);
+
         advisorMap[idx]= advice;
+        print(msg);
+        print(justification);
     }
     return advisorMap;
 }

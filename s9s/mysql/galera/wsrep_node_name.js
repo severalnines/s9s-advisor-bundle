@@ -1,3 +1,4 @@
+
 #include "common/mysql_helper.js"
 
 
@@ -19,8 +20,15 @@ function main()
         map         = host.toMap();
         gStatus     = map["galera"]["galerastatus"];
         
+        print("   ");
+        print(host);
+        print("==========================");
+        
         if (gStatus!="Primary")
+        {
+            print("Is not Primary, continuing.");
             continue;
+        }
         var value = readVariable(host, "WSREP_NODE_NAME");
         if (value == false)
             continue;
@@ -28,6 +36,7 @@ function main()
         var advice = new CmonAdvice();
         advice.setTitle("wsrep_node_name check");
         advice.setHost(host);
+        justification = "";
         if (value.toString() =="")
         {
             msg="Set the wsrep_node_name=" + host.hostName() + "."
@@ -38,19 +47,22 @@ function main()
                 " wsrep_node_name can be set as a global variable,"
                 " but also set in my.cnf.";
             advice.setSeverity(Warning);
-            advice.setJustification("wsrep_node_name is not set.");
+            justification = "wsrep_node_name is not set.";
+            advice.setJustification(justification);
             host.raiseAlarm(MySqlAdvisor, Warning, msg);
         }
         else
         {
             msg="wsrep_node_name is configured, no action needed.";
             advice.setSeverity(Ok);
-            advice.setJustification("Current wsrep_node_name=" + value);
+            justification = "Current wsrep_node_name=" + value;
+            advice.setJustification(justification);
             host.clearAlarm(MySqlAdvisor);
         }
         advice.setAdvice(msg);
-
         advisorMap[idx]= advice;
+        print(msg);
+        print(justification);
     }
     return advisorMap;
 }

@@ -22,9 +22,15 @@ function main()
         map         = host.toMap();
         connected     = map["connected"];
         var advice = new CmonAdvice();
+        print("   ");
+        print(host);
+        print("==========================");
 
         if (!connected)
+        {
+            print("Not connected");
             continue;
+        }
         if (checkPrecond(host))
         {
             var Threads_connected = 
@@ -47,6 +53,7 @@ function main()
                     msg = ADVICE_WARNING;
                     justification = used + "% of the connections is currently used,"
                         " which is > 90% of max_connections.";
+                    
                 }
                 else
                 {
@@ -55,18 +62,22 @@ function main()
                     advice.setSeverity(0);
                     msg = ADVICE_OK;
                 }
-                advice.setJustification(justification);
             }
         }
         else
         {
             msg = "Not enough data to calculate";
+            justification = msg;
             advice.setSeverity(0);
         }
         advice.setHost(host);
         advice.setTitle(TITLE);
+        advice.setJustification(justification);
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
+        print(msg);
+        print(justification);
     }
     return advisorMap;
 }
+

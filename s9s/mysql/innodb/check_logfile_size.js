@@ -22,8 +22,15 @@ function main()
         connected     = map["connected"];
         var advice = new CmonAdvice();
 
+        print("   ");
+        print(host);
+        print("==========================");
+        
         if (!connected)
+        {
+            print("Not connected");
             continue;
+        }
         if (checkPrecond(host))
         {
             var configured_logfile_sz = readVariable(host, "innodb_log_file_size").toULongLong();
@@ -73,7 +80,8 @@ function main()
         advice.setJustification(justification);
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
+        print(msg);
+        print(justification);
     }
     return advisorMap;
 }
-
