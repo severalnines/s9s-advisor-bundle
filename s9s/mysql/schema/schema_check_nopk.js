@@ -32,7 +32,7 @@ query= "SELECT DISTINCT t.table_schema as db, t.table_name as tbl,"
 
 function main()
 {
-    var hosts     = cluster::mysqlNodes();
+    var hosts     = cluster::mySqlNodes();
     var advisorMap = {};
     /* We will only run the query on one galera node 
      * so we will create only one advice.
