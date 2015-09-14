@@ -20,12 +20,22 @@ function main()
     var endTime   = CmonDateTime::currentDateTime();
     var startTime = endTime - lookBack;
     var futureTime = endTime + lookAhead;
-  
+    var examinedHostnames = "";
     for (idx = 0; idx < hosts.size(); ++idx)
     {
+        host        = hosts[idx];
+        if (!host.connected())
+            continue;
+        if (examinedHostnames.contains(host.hostName()))
+            continue;
+        examinedHostnames += host.hostName();
+        print("   ");
+        print(host.hostName());
+
         var advice = new CmonAdvice();
 
-        host         = hosts[idx];
+        print("==========================");
+        
         //map          = host.toMap();
         var list     = host.diskStats(startTime, endTime);
         var array3   = list.toArray("total");
@@ -39,8 +49,9 @@ function main()
     
         expectedUsed = array3[array3.size()-1] - expected;
         currentUsed = array3[array3.size()-1] - array1[array1.size()-1];
-        expectedUsedPct = 100 * expectedUsed / array3[array3.size()-1];
-        currentUsedPct = 100 * currentUsed / array3[array3.size()-1];
+        expectedUsedPct = round(100 * expectedUsed / array3[array3.size()-1], 1);
+        currentUsedPct =round(100 * currentUsed / array3[array3.size()-1], 1);
+        
         
         justification = "Current used amount of disk space is " + currentUsedPct.toInt() + "%. "
             "In " + LOOKAHEAD_DAYS + " days " + expectedUsedPct.toInt() + 
@@ -51,20 +62,35 @@ function main()
         if (expectedUsedPct > THRESHOLD_WARNING || currentUsedPct > THRESHOLD_WARNING)
         {
             advice.setSeverity(Warning);
-            msg = "The host is running short on disk space."
-                  " If you have recently removed or created large files on the hosts then the prediciton"
-                " (using linear estimation) can be inaccurate.";
+            if (expectedUsedPct > THRESHOLD_WARNING)
+                msg = "The host is expected to run short on disk space."
+                      " " + expectedUsedPct + "% is expected to be used"
+                      " in " + LOOKAHEAD_DAYS + " days."
+                      " If you have recently removed or created large" 
+                      " files on the hosts then the prediction"
+                      " (using linear estimation) can be inaccurate."
+                      " You are recommended to either increase the partition size or"
+                      " purge large, unused, files.";
+            if (currentUsedPct > THRESHOLD_WARNING)
+                msg = "The host is short on disk space. " + currentUsedPct +
+                      " % is used."
+                      " Correct as soon as possible.";
+                      
+            host.raiseAlarm(HostDiskUsage, Warning, msg);
         }
         else
         {
             advice.setSeverity(Ok);
             msg = "The host has sufficient disk space.";
+            host.raiseAlarm(HostDiskUsage);
         }
         advice.setJustification(justification);
         advice.setHost(host);
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
+
     }
     return advisorMap;
 }

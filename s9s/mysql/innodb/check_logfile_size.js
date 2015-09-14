@@ -40,7 +40,19 @@ function main()
             var startTime = endTime - MINUTES * 60 /*seconds*/;
             var stats     = host.sqlStats(startTime, endTime);
             var array     = stats.toArray("created,interval,INNODB_LSN_CURRENT");
-        
+       
+            if(array[2,0] === #N/A  || array[2,0] == "")
+            {
+                /* Not all vendors have INNODB_LSN_CURRENT*/
+                advice.setTitle(TITLE);
+                advice.setJustification("INNODB_LSN_CURRENT does not exists in"
+                                        " this MySQL release.");
+                advice.setAdvice("Nothing to do.");
+                advice.setHost(host);
+                advice.setSeverity(Ok);
+                advisorMap[idx]= advice;
+                continue;
+            }
             var firstLSN = array[2,0].toULongLong();
             var latestLSN = array[2,array.columns()-1].toULongLong();
             
@@ -80,8 +92,9 @@ function main()
         advice.setJustification(justification);
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
-        print(msg);
-        print(justification);
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }
+
+

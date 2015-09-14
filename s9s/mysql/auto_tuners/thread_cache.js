@@ -67,8 +67,9 @@ function main()
                 thread_cache_size=thread_cache_size + INCREMENT;
                 if (thread_cache_size < UPPER_LIMIT)
                 {
-                    if (setGlobalVariable(host,"thread_cache_size",
-                                          thread_cache_size))
+                    retval = setGlobalVariable(host,"table_open_cache", 
+                                          table_open_cache);
+                    if (retval["success"])
                     {
                         print(host.hostName() + ":" + host.port() + 
                               ": Increasing 'thread_cache_size' to " + 
@@ -77,14 +78,28 @@ function main()
                         value = config.setVariable("MYSQLD", 
                                                    "thread_cache_size", 
                                                    thread_cache_size);
-                        config.save();
-                        advice.setAdvice("Increased thread_cache_size=" + 
-                                         value + 
-                                         ".");
+
+                        var retval = config.save();
+                        if (!retval["success"])
+                        {
+                            print(host, ": Failed due to: " + retval["errorMessage"]);
+                            advice.setAdvice("Failed due to: " + retval["errorMessage"]);
+                        }
+                        else
+                        {
+                            advice.setAdvice("Increased thread_cache_size=" + 
+                                             value + 
+                                             ".");
+                        }
                         
                         advise.setJustification("Threads created exceeds"
                                                 " the thread_cache size."
                                                 " Tuning neeed.");
+                    }
+                    else
+                    {
+                        print(host, ": Failed due to: " + retval["errorMessage"]);
+                        advice.setAdvice("Failed due to: " + retval["errorMessage"]);
                     }
                 }
             }
@@ -100,6 +115,7 @@ function main()
         }
         advice.setSeverity(0);
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }

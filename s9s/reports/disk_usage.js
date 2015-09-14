@@ -34,9 +34,16 @@ function main()
     print("                           FREE                 TOTAL");
     print("HOST                 CURRENT    FORECAST  ");
     
+    var examinedHostnames = "";
     for (idx = 0; idx < hosts.size(); ++idx)
     {
-        host         = hosts[idx];
+        host        = hosts[idx];
+        if (!host.connected())
+            continue;
+        if (examinedHostnames.contains(host.hostName()))
+            continue;
+        examinedHostnames += host.hostName();
+
         //map          = host.toMap();
         var list     = host.diskStats(startTime, endTime);
         var array3   = list.toArray("total");
@@ -54,3 +61,4 @@ function main()
     }
     return true;
 }
+

@@ -73,6 +73,7 @@ function main()
         advice.setHost(host);
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
+        print(advice.toString("%E"));
         advisorMap[idx]= advice;
     }
     return advisorMap;

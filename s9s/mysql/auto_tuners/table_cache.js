@@ -54,8 +54,9 @@ function main()
                 table_open_cache=table_open_cache + INCREMENT;
                 if (table_open_cache < UPPER_LIMIT)
                 {
-                    if (setGlobalVariable(host,"table_open_cache", 
-                                          table_open_cache))
+                    retval = setGlobalVariable(host,"table_open_cache", 
+                                          table_open_cache);
+                    if (retval["success"])
                     {
                         print(host.hostName() + ":" + host.port() + 
                               ": Increasing 'table_open_cache' to " + 
@@ -64,13 +65,28 @@ function main()
                         value = config.setVariable("MYSQLD", 
                                                    "table_open_cache", 
                                                    table_open_cache);
-                        config.save();
+
                         advice.setJustification("Table cache usage is >95%,"
                                                 " tuning needed.");
-                        advice.setAdvice("Increaesed table_open_cache=" + 
-                                         value + 
-                                         ".");
+                        var retval = config.save();
+                        if (!retval["success"])
+                        {
+                            print(host, ": Failed due to: " + retval["errorMessage"]);
+                            advice.setAdvice("Failed due to: " + retval["errorMessage"]);
+                        }
+                        else
+                        {
+                            advice.setAdvice("Increased table_open_cache=" + 
+                                             value + 
+                                             ".");
+                        }
                     }
+                    else
+                    {
+                        print(host, ": Failed due to: " + retval["errorMessage"]);
+                        advice.setAdvice("Failed due to: " + retval["errorMessage"]);
+                    }
+                    
                 }
             }
             else
@@ -86,6 +102,7 @@ function main()
         }
         advice.setSeverity(0);
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }

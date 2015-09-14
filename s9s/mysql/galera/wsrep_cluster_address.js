@@ -61,7 +61,7 @@ function main()
             if(origValue == "gcomm://")
             {
                 advice.setSeverity(Critical);
-                msg = "Set wsrep_cluster_adress=gcomm://" + missingHosts;
+                msg = "Set wsrep_cluster_address=gcomm://" + missingHosts;
                 justification = "wsrep_cluster_address=gcomm:// ."
                     " This can lead to disasters and data loss.";
             }
@@ -74,10 +74,10 @@ function main()
                 justification = "wsrep_cluster_address=" + origValue + 
                     " does not contain " + missingHosts;
             }
-            print(host.hostName() + ": " + msg);
             advice.setJustification(justification);
             advice.setAdvice(msg);   
         }
+        print(advice.toString("%E"));
         advisorMap[idx]= advice;
     }
     return advisorMap;

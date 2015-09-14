@@ -61,8 +61,7 @@ function main()
         }
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
-        print(msg);
-        print(justification);
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }

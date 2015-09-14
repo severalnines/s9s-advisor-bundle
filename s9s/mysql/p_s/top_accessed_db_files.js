@@ -17,6 +17,11 @@ for (idx = 0; idx < hosts.size(); ++idx)
     connected     = map["connected"];
     if (!connected)
         continue;
+    if (!readVariable(host, "performance_schema").toBoolean())
+    {
+        print(host, ": performance_schema is not enabled.");
+        continue;
+    }
     ret = getValueMap(host, query);
     print("Server: ", host);
     print("------------------------");

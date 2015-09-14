@@ -71,6 +71,7 @@ function main()
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }

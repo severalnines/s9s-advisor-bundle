@@ -5,7 +5,7 @@
  */
 
 var VARIABLE="query_cache_type";
-var VALUE=1;
+var VALUE=0;
 var FORCE=1;
 function main()
 {
@@ -33,7 +33,9 @@ function main()
                         VARIABLE + ", since " + VALUE  + " = (current " + value + ").");
                 continue;
             }
-            if (setGlobalVariable(host,VARIABLE, VALUE) || FORCE)
+            retval = setGlobalVariable(host,VARIABLE, 
+                                          VALUE);
+            if (retval["success"] || FORCE)
             {
                 print(host.hostName() + ":" + host.port() + ": Setting " + 
                        VARIABLE + "=" + VALUE  + 
@@ -46,6 +48,7 @@ function main()
             {
                 print(host.hostName() + ":" + host.port() + 
                       ": Failed to set " + VARIABLE + "=" + VALUE  + ".");
+                print(host, ": Failed due to: " + retval["errorMessage"]);
             }
         }
         else

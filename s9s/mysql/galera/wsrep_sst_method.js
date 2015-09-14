@@ -38,8 +38,19 @@ function main()
         advice.setHost(host);
         if (value.toString() !="xtrabackup-v2")
         {
-            msg="Use wsrep_sst_method=xtrabackup-v2 if possible.";
-            advice.setSeverity(Warning);
+            retval = host.system("test -f /usr/bin/wsrep_sst_xtrabackup-v2");
+            reply = retval["success"];
+            if (reply)
+            {
+               msg="Use wsrep_sst_method=xtrabackup-v2 instead.";
+               advice.setSeverity(Warning);
+            }
+            else
+            {
+               msg="/usr/bin/wsrep_sst_xtrabackup-v2 does not exist,"
+                   " so keep the current setting.";
+               advice.setSeverity(Ok);      
+            }
             justification = "Current wsrep_sst_method=" + value;
             advice.setJustification(justification);
             host.raiseAlarm(MySqlAdvisor, Warning, msg);
@@ -54,8 +65,8 @@ function main()
         }
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
-        print(msg);
-        print(justification);
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }
+

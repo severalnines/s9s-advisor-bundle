@@ -20,6 +20,9 @@ function main()
 
         if (!connected)
             continue;
+        print("   ");
+        print(host);
+        print("==========================");
         count = getSingleValue(host, 
                                "SELECT COUNT(*) FROM mysql.user"
                                " WHERE host='%'").toInt();
@@ -47,6 +50,7 @@ function main()
         }
         advice.setTitle(TITLE);
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }

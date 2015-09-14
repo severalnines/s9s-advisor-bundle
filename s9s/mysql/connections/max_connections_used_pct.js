@@ -31,54 +31,44 @@ function main()
             print("Not connected");
             continue;
         }
-        if (checkPrecond(host))
+        var Max_used_connections = 
+            readStatusVariable(host, "Max_used_connections").toInt();
+        
+        var Max_connections = readVariable(host, "Max_connections").toInt();
+        
+        if (Max_used_connections == false ||
+            Max_connections == false)
         {
-            var Max_used_connections = 
-                readStatusVariable(host, "Max_used_connections").toInt();
-            
-            var Max_connections = readVariable(host, "Max_connections").toInt();
-    
-            if (Max_used_connections == false ||
-                Max_connections == false)
-            {
-                msg = "Not enough data to calculate";
-            }
-            else
-            {
-                var used = 100 * Max_used_connections / Max_connections;
-                if (used > 90)
-                {
-                    advice.setSeverity(1);
-                    msg = ADVICE_WARNING;
-                                    justification = "During the lifetime, a peak of " 
-                                                            + used + "% connections"
-                                                            " have ever been used,"
-                                        " which is > 90% of max_connections.";
-                }
-                else
-                {
-                                     justification = "During the lifetime, a peak of " 
-                                                             + used + "% connections"
-                                                             " have ever been used,"
-                                         " which is <= 90% of max_connections.";
-
-                                     advice.setSeverity(0);
-                                     msg = ADVICE_OK;
-                }
-            }
+            msg = "Not enough data to calculate";
         }
         else
         {
-            msg = "Not enough data to calculate";
-            justification = msg;
-            advice.setSeverity(0);
+            var used = round(100 * Max_used_connections / Max_connections,1);
+            if (used > 90)
+            {
+                advice.setSeverity(1);
+                msg = ADVICE_WARNING;
+                justification = "During the lifetime, a peak of " 
+                    + used + "% connections"
+                " have ever been used,"
+                " which is > 90% of max_connections.";
+            }
+            else
+            {
+                justification = "During the lifetime, a peak of " 
+                    + used + "% connections"
+                " have ever been used,"
+                " which is <= 90% of max_connections.";
+                
+                advice.setSeverity(0);
+                msg = ADVICE_OK;
+            }
         }
         advice.setHost(host);
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
         advice.setJustification(justification);
-        print(msg);
-        print(justification);
+        print(advice.toString("%E"));
         advisorMap[idx]= advice;
     }
     return advisorMap;

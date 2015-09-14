@@ -11,12 +11,20 @@ var THRESHOLD_WARNING = 90;
 var MINUTES = 60;
 function main()
 {
-    var hosts     = cluster::mySqlNodes();
+    var hosts     = cluster::hosts();
     var advisorMap = {};
-
+    var examinedHostnames = "";
     for (idx = 0; idx < hosts.size(); ++idx)
     {
         host        = hosts[idx];
+        if (!host.connected())
+            continue;
+        if (examinedHostnames.contains(host.hostName()))
+            continue;
+        examinedHostnames += host.hostName();
+        print("   ");
+        print(host.hostName());
+        print("==========================");
 
         var endTime   = CmonDateTime::currentDateTime();
         var startTime = endTime - MINUTES * 60 /*seconds*/;
@@ -51,6 +59,10 @@ function main()
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
+        
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }
+
+

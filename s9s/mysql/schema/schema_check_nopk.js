@@ -29,7 +29,6 @@ query= "SELECT DISTINCT t.table_schema as db, t.table_name as tbl,"
        "        (t.engine <> 'InnoDB' OR c.constraint_name IS NULL OR" 
        "         s.index_type IN ('FULLTEXT','SPATIAL'))  "
     "  ORDER BY t.table_schema,t.table_name";
-
 function main()
 {
     var hosts     = cluster::mySqlNodes();
@@ -41,6 +40,7 @@ function main()
     var advice = new CmonAdvice();
     advice.setTitle("Tables without PRIMARY KEY");
         
+    var foundNoPK = false;
     for (idx = 0; idx < hosts.size(); idx++)
     {
         host        = hosts[idx];
@@ -59,7 +59,8 @@ function main()
             advice.setAdvice("Nothing to do. All tables have a PRIMARY KEY");
             advice.setSeverity(Ok);
             advice.setJustification("All tables have a PRIMARY KEY");
-            break;
+            advisorMap[idx]= advice;
+            return advisorMap;
         }
 
         justification = "The tables: '";
@@ -71,22 +72,37 @@ function main()
 
         for(i=0; i<ret.size(); ++i)
         {
-            print("<tr><td width=20%>" + ret[i][0] + "</td>"
+            if( ret[i][0] == 0)
+            {
+                print("<tr><td width=20%>" + ret[i][0] + "</td>"
                   "<td width=20%>" + ret[i][1] + "</td>"
                   "<td width=10%>" + ret[i][2] + "</td>"
-                  "<td width=40%>" + ret[i][6] + "</td></tr>");
+                      "<td width=40%>" + ret[i][6] + "</td></tr>");
+                foundNoPK = true;
+            }
         }
         print("</table><br/>");
+        
         for(i=0; i<ret.size(); ++i)
         {
-            justification = justification +  " " + ret[i][0]  + "." + ret[i][1];
+            if( ret[i][0] == 0)
+                justification = justification +  " " + ret[i][0]  + "." + ret[i][1];
         }
-        justification = justification + "' do not have a PRIMARY KEY.";
-        advice.setAdvice("Add a PRIMARY KEY.");
-        advice.setSeverity(Warning);
-        advice.setJustification(justification);
-    
+        if( foundNoPK )
+        {
+            justification = justification + "' do not have a PRIMARY KEY.";
+            advice.setAdvice("Add a PRIMARY KEY.");
+            advice.setSeverity(Warning);
+            advice.setJustification(justification);
+        }
+        else
+        {
+            advice.setAdvice("Nothing to do. All tables have a PRIMARY KEY");
+            advice.setSeverity(Ok);
+            advice.setJustification("All tables have a PRIMARY KEY");
+        }
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
         break;
     }
     return advisorMap;

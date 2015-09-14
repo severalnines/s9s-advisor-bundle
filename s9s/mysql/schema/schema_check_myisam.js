@@ -43,7 +43,8 @@ function main()
             advice.setAdvice("Nothing to do. There are no MYISAM tables.");
             advice.setSeverity(Ok);
             advice.setJustification("No MYISAM table has been detected.");
-            break;
+            advisorMap[idx]= advice;
+            return advisorMap;
         }
 
         justification = "The tables: '";
@@ -69,7 +70,7 @@ function main()
         advice.setAdvice("Change engine to InnoDB.");
         advice.setSeverity(Warning);
         advice.setJustification(justification);
-    
+        print(advice.toString("%E"));
         advisorMap[idx]= advice;
         break;
     }

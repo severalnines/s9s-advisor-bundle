@@ -74,8 +74,7 @@ function main()
         advice.setJustification(justification);
 
         advisorMap[idx]= advice;
-        print(msg);
-        print(justification);
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }

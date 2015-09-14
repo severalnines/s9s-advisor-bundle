@@ -4,7 +4,7 @@
  * shows what accounts are allowed to access from any host.
  */
 
-var TITLE="Security Audit - v0.1";
+var TITLE="Security Audit - v0.2";
 
 function main()
 {
@@ -56,7 +56,10 @@ function main()
             for(i=0; i<ret.size(); ++i)
             {
                 print(host, ": '" + ret[i][0] + "'@'" + ret[i][1] + 
-                      "' do not have a password set! Set the password!");
+                      "' do not have a password set! Set the password or"
+                      " drop this account!"
+                      " You can also run mysql_secure_installation with STRICT"
+                      " as argument to remove accounts with no password.");
             }
         }
         print("   ");
@@ -93,3 +96,4 @@ function main()
         print("   ");
     }
 }
+

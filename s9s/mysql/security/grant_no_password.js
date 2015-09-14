@@ -20,6 +20,10 @@ function main()
 
         if (!connected)
             continue;
+            
+        print("   ");
+        print(host);
+        print("==========================");
         ret = getSingleValue(host, 
                            "SELECT COUNT(*) FROM mysql.user WHERE password=''");
         if (ret == false)
@@ -36,7 +40,9 @@ function main()
                 advice.setJustification("Found " + count + 
                                         " accounts with no password.");
                 advice.setAdvice("You have accounts without a password set."
-                                 " Run s9s/mysql/programs/security_audit.js.");
+                                 " Run s9s/mysql/programs/security_audit.js"
+                                 " for more details and then"
+                                 " s9s/mysql/programs/mysql_secure_installation.js");
                 advice.setSeverity(Warning);
             }
             else
@@ -50,6 +56,8 @@ function main()
         }
         advice.setTitle(TITLE);
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
+
     }
     return advisorMap;
 }

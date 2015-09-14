@@ -15,15 +15,24 @@ function main()
     var hosts     = cluster::hosts();
     var advisorMap = {};
 
+    var examinedHostnames = "";
     for (idx = 0; idx < hosts.size(); ++idx)
     {
         host        = hosts[idx];
-        map         = host.toMap();
-        var advice = new CmonAdvice();
-
         if (!host.connected())
             continue;
-            
+        if (examinedHostnames.contains(host.hostName()))
+            continue;
+        examinedHostnames += host.hostName();
+        print("   ");
+        print(host.hostName());
+        print("==========================");
+
+
+        host        = hosts[idx];
+        map         = host.toMap();
+        var advice = new CmonAdvice();
+        
         retval = host.system("dmesg | grep -i numa");
         reply = retval["result"];
         if (!retval["success"])
@@ -38,10 +47,10 @@ function main()
             }
             else
             {
-                msg = "Check my the command failed: " + retval["errorMessage"];
+                msg = "Check why the command failed: " + retval["errorMessage"];
                 advice.setSeverity(Warning);
                 advice.setJustification("Command failed.");
-                advice.setAdvice("Check my the command failed: " + retval["errorMessage"]);
+                advice.setAdvice("Check why the command failed: " + retval["errorMessage"]);
             }
             print(host.hostName() + ": " + msg);
         }
@@ -65,6 +74,7 @@ function main()
         advice.setHost(host);
         advice.setTitle(TITLE);
         advisorMap[idx]= advice;
+        print(advice.toString("%E"));
     }
     return advisorMap;
 }

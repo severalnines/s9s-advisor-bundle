@@ -3,8 +3,8 @@
 function readVariable(host1, myVar)
 {
 
-    query        = "SHOW GLOBAL VARIABLES LIKE '" + myVar +  "'";
-    retval       = host1.executeSqlQuery(query);
+    _query        = "SHOW GLOBAL VARIABLES LIKE '" + myVar +  "'";
+    retval       = host1.executeSqlQuery(_query);
     //
     // If the SQL query failed we print the error message
     // and return false.
@@ -30,10 +30,10 @@ function readVariable(host1, myVar)
     return value;
 }
 
-function getSingleValue(host1, query)
+function getSingleValue(host1, _query)
 {
 
-    retval       = host1.executeSqlQuery(query);
+    retval       = host1.executeSqlQuery(_query);
     //
     // If the SQL query failed we print the error message
     // and return false.
@@ -52,7 +52,6 @@ function getSingleValue(host1, query)
     nRows  = result.rows();
     if (nRows==0)
         return false;
-    print(nRows);
     for (row = 0; row < nRows; ++row)
     {
         value = result[row, 0];
@@ -60,10 +59,10 @@ function getSingleValue(host1, query)
     return value;
 }
 
-function getValueMap(host1, query)
+function getValueMap(host1, _query)
 {
 
-    retval       = host1.executeSqlQuery(query);
+    retval       = host1.executeSqlQuery(_query);
     //
     // If the SQL query failed we print the error message
     // and return false.
@@ -97,8 +96,8 @@ function getValueMap(host1, query)
 function readStatusVariable(host, myVar)
 {
 
-    query        = "SHOW GLOBAL STATUS LIKE '" + myVar +  "'";
-    retval       = host.executeSqlQuery(query);
+    _query        = "SHOW GLOBAL STATUS LIKE '" + myVar +  "'";
+    retval       = host.executeSqlQuery(_query);
     //
     // If the SQL query failed we print the error message
     // and return false.
@@ -122,9 +121,9 @@ function readStatusVariable(host, myVar)
     return value;
 }
 
-function executeSqlCommand(host, query)
+function executeSqlCommand(host, _query)
 {
-    retval       = host.executeSqlCommand(query);
+    retval       = host.executeSqlCommand(_query);
     //
     // If the SQL query failed we print the error message
     // and return false.
@@ -136,6 +135,14 @@ function executeSqlCommand(host, query)
     }
     return true;
 }
+
+
+function executeSqlCommand2(host, _query)
+{
+    retval       = host.executeSqlCommand(_query);
+    return retval; 
+}
+
 
 function checkPrecond(host)
 {
@@ -153,12 +160,17 @@ function checkPrecond(host)
 
 function setGlobalVariable(host, variable, value)
 {
-    query = "SET GLOBAL " + variable + "=" + value;
-    return executeSqlCommand(host,query);
+    if (value.looksInteger() || value.looksULongLong())
+        _query = "SET GLOBAL " + variable + "=" + value;
+    else
+        _query = "SET GLOBAL " + variable + "='" + value + "'";
+
+    return executeSqlCommand2(host,_query);
 }
 
 function mySleep(host, time)
 {
-    query = "SELECT SLEEP(" + time + ")";
-    return executeSqlCommand(host,query);
+    _query = "SELECT SLEEP(" + time + ")";
+    return executeSqlCommand(host, _query);
 }
+
