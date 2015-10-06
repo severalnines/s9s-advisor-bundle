@@ -40,8 +40,10 @@ function main()
         {
             retval = host.system("test -f /usr/bin/wsrep_sst_xtrabackup-v2");
             reply = retval["success"];
+            var raiseAlarm = false;
             if (reply)
             {
+               raiseAlarm = true;
                msg="Use wsrep_sst_method=xtrabackup-v2 instead.";
                advice.setSeverity(Warning);
             }
@@ -53,7 +55,8 @@ function main()
             }
             justification = "Current wsrep_sst_method=" + value;
             advice.setJustification(justification);
-            host.raiseAlarm(MySqlAdvisor, Warning, msg);
+            if (raiseAlarm)
+                 host.raiseAlarm(MySqlAdvisor, Warning, msg);
         }
         else
         {

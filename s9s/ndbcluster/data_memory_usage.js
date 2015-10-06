@@ -5,7 +5,7 @@
  * Checks data memory usage
  */
  
-var TITLE = "Data Memory Usage";
+var TITLE = "DataMemory Usage";
 
 var DATAMEMORY_WARNING = 80;
 var DATAMEMORY_CRITICAL = 90;

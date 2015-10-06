@@ -24,8 +24,11 @@ function main()
     for (idx = 0; idx < hosts.size(); ++idx)
     {
         host        = hosts[idx];
+/*
+  better check needed.
         if (!host.connected())
             continue;
+*/
         if (examinedHostnames.contains(host.hostName()))
             continue;
         examinedHostnames += host.hostName();

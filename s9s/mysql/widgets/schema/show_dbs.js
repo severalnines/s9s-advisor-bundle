@@ -8,7 +8,10 @@
  * hostAndPort : * for all hosts or 10.10.10.10:3306 
  */
 
-query="select SCHEMA_NAME from INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME NOT IN ('information_schema', 'performance_schema') ORDER BY SCHEMA_NAME ASC";
+query="select SCHEMA_NAME from INFORMATION_SCHEMA.SCHEMATA "
+      " WHERE SCHEMA_NAME NOT IN "
+      " ('information_schema', 'performance_schema', 'ndbinfo')"
+      " ORDER BY SCHEMA_NAME ASC";
 
 function main(hostAndPort) {
     var hosts = cluster::mySqlNodes();

@@ -12,7 +12,7 @@ var WARNING_THRESHOLD=4;
 query= "SELECT table_schema, table_name, engine"
        " FROM information_schema.tables"
        " WHERE table_schema NOT IN ('mysql', 'INFORMATION_SCHEMA',"
-    " 'performance_schema') AND engine = 'MyISAM'";
+       " 'performance_schema', 'ndbinfo') AND engine = 'MyISAM'";
 
 function main()
 {
