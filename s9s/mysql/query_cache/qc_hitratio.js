@@ -8,8 +8,8 @@ var TITLE="Query cache hitratio";
 var ADVICE_WARNING= "Tuning the query_cache is hard."
     " Try and increase the query_cache_size to be between 64M and 256M."
     " If the size is already within this range and the hitratio,"
-    " then the application/database load may not benefit from the query_cache.."
-    " "
+    " then the application/database load may not benefit from the query_cache.";
+
     var ADVICE_OK="Query cache is ok." ;
 var THRESHOLD_WARNING = 50;
 function main()
@@ -24,13 +24,23 @@ function main()
         connected     = map["connected"];
         var advice = new CmonAdvice();
 
+     
+        print("   ");
+        print(host);
+        print("==========================");
+        
         if (!connected)
+        {
+            print("Not connected");
             continue;
+        }
         if (checkPrecond(host))
         {
             var Qcache_hits = readStatusVariable(host, "Qcache_hits").toInt();
             var Qcache_inserts = readStatusVariable(host, 
                                                     "Qcache_inserts").toInt();
+ 
+
             var query_cache_type = readVariable(host, "query_cache_type");
             if (Qcache_hits == false ||
                Qcache_inserts == false ||

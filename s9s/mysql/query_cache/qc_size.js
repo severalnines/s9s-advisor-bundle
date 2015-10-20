@@ -23,8 +23,14 @@ function main()
         connected     = map["connected"];
         var advice = new CmonAdvice();
 
+        print("   ");
+        print(host);
+        print("==========================");
         if (!connected)
+        {
+            print("Not connected");
             continue;
+        }
         var query_cache_type = readVariable(host, "query_cache_type");
 
         if (query_cache_type == 0 || query_cache_type=="OFF")
@@ -64,3 +70,4 @@ function main()
     }
     return advisorMap;
 }
+
