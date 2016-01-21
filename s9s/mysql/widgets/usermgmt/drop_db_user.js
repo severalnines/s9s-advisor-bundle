@@ -46,7 +46,8 @@ function main(user, hostname, hostAndPort)
         else
             query = "SET SQL_LOG_BIN=OFF;";
         executeSqlCommand2(host, query);
-
+        if (user == "*")
+              user = "";
         query = "DROP USER '" + user + "'@'" + hostname + "'";
         //print(query);
         var retval = executeSqlCommand2(host, query);
