@@ -4,9 +4,10 @@
  * Checks the percentage of currently used connections 
  */
 
-var WARNING_THRESHOLD=0;
+var WARNING_THRESHOLD=90;
 var TITLE="Connections currently used";
-var ADVICE_WARNING="You are using more than 80% of the max_connections."
+var ADVICE_WARNING="You are using more than " + WARNING_THRESHOLD +
+    "% of the max_connections."
     " Consider regulating load, e.g by using HAProxy. Using up all connections"
     " may render the database server unusable.";
 var ADVICE_OK="The percentage of currently used connections is satisfactory." ;
@@ -45,12 +46,12 @@ function main()
         {
             var used = round(100 * Threads_connected / Max_connections,1);
             
-            if (used > 80)
+            if (used > WARNING_THRESHOLD)
             {
                 advice.setSeverity(1);
                 msg = ADVICE_WARNING;
                 justification = used + "% of the connections is currently used,"
-                " which is > 90% of max_connections.";
+                " which is > " + WARNING_THRESHOLD + "% of max_connections.";
                 
             }
             else

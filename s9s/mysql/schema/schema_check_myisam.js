@@ -7,12 +7,18 @@
  * when a schema change has been made.
  */
  
-var WARNING_THRESHOLD=4;
-
-query= "SELECT table_schema, table_name, engine"
+var query1= "SELECT table_schema, table_name, engine"
        " FROM information_schema.tables"
        " WHERE table_schema NOT IN ('mysql', 'INFORMATION_SCHEMA',"
        " 'performance_schema', 'ndbinfo') AND engine = 'MyISAM'";
+       
+var query2="SELECT count(table_name)"
+           " FROM information_schema.tables"
+           " WHERE table_schema "
+           "NOT IN ('mysql', 'INFORMATION_SCHEMA','performance_schema', 'ndbinfo')";
+
+var MAX_TABLES=1024;
+var ANALYZE_ALL_HOSTS=0;
 
 function main()
 {
@@ -23,7 +29,7 @@ function main()
      */
      
     var advice = new CmonAdvice();
-    advice.setTitle("MyISAM Tables");
+    advice.setTitle("Checking for MyISAM Tables");
         
     for (idx = 0; idx < hosts.size(); idx++)
     {
@@ -35,15 +41,35 @@ function main()
         if (!connected)
             continue;
         
-        advice.setHost(host);
-    
-        ret = getValueMap(host, query);
+        print("   ");
+        print(host);
+        print("==========================");
+        advice.setHost(host);    
+        var tableCount = getSingleValue(host, query2);
+
+        if (tableCount.toInt() > MAX_TABLES)
+        {
+            advice.setAdvice("Nothing to do.");
+            advice.setSeverity(Ok);
+            advice.setJustification("Too many tables to analyze"
+                                    " using information_schema.");
+            print(advice.toString("%E"));
+            advisorMap[idx]= advice;
+            if (ANALYZE_ALL_HOSTS > 0)
+                continue;
+            return advisorMap;
+        }
+        
+        ret = getValueMap(host, query1);
         if(ret == false || ret.size() == 0)
         {
             advice.setAdvice("Nothing to do. There are no MYISAM tables.");
             advice.setSeverity(Ok);
             advice.setJustification("No MYISAM table has been detected.");
             advisorMap[idx]= advice;
+            print(advice.toString("%E"));
+            if (ANALYZE_ALL_HOSTS > 0)
+                continue;
             return advisorMap;
         }
 
@@ -59,7 +85,7 @@ function main()
             print("<tr><td width=20%>" + ret[i][0] + "</td>"
                   "<td width=20%>" + ret[i][1] + "</td>"
                   "<td width=20%>" + ret[i][2] + "</td>"
-                  "<td width=40%>Change to ENGINE = INNODB.</td></tr>");
+                  "<td width=40%>Change to ENGINE = INNODB if possible.</td></tr>");
         }
         print("</table><br/>");
         for(i=0; i<ret.size(); ++i)
@@ -72,6 +98,8 @@ function main()
         advice.setJustification(justification);
         print(advice.toString("%E"));
         advisorMap[idx]= advice;
+        if (ANALYZE_ALL_HOSTS > 0)
+            continue;
         break;
     }
     return advisorMap;

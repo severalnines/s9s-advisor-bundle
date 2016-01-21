@@ -75,4 +75,3 @@ function main(user, hostname, password, hostAndPort)
      }
      exit(result);
 }
-

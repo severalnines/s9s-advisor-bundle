@@ -5,9 +5,7 @@
 
 /**
  * Show grants for users
- */ 
-
-
+ */
 queryGlobalPrivs="SELECT GRANTEE, IS_GRANTABLE, "
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) FROM"
       " information_schema.user_privileges GROUP BY GRANTEE";
@@ -50,8 +48,6 @@ privs on a particular database for a particular table for a particular user host
    db = dbname && table = tablename && user = value && host = value 
 */
     
-
-
 function main(db, table, user, hostname, hostAndPort)
 {
     var hosts     = cluster::mySqlNodes();
@@ -63,7 +59,6 @@ function main(db, table, user, hostname, hostAndPort)
         user.empty())
     {
         result["error_msg"] = "Argument 'user' not specified"; 
-        print(result["error_msg"]);
         exit(result);
     }
     
@@ -71,7 +66,6 @@ function main(db, table, user, hostname, hostAndPort)
         hostname.empty())
     {
         result["error_msg"] = "Argument 'hostname' not specified"; 
-        print(result["error_msg"]);
         exit(result);
     }
     if (db=="*")
@@ -121,8 +115,6 @@ function main(db, table, user, hostname, hostAndPort)
         result["grants"][idx]["grant"]={};
         result["grants"][idx]["grant"]["hostname"] = host.hostName();
         result["grants"][idx]["grant"]["port"] = host.port();
-        print (host);
-        print(" ");
 
         if (ret != false && ret.size() > 0)
         {
@@ -145,14 +137,6 @@ function main(db, table, user, hostname, hostAndPort)
                     table = ret[i][3];
                 }
 
-                 
-                print("Grantee: " + grantee );
-                print("Privileges: " + privs );
-                print("With GRANT OPTION: " + is_grantable );
-                print("Schema: " + schema);
-                print("Table: " + table);
-
-                print(" ");
                 result["grants"][idx]["grant"][i]={};
                 result["grants"][idx]["grant"][i]["grantee"]=grantee;
                 result["grants"][idx]["grant"][i]["is_grantable"]=is_grantable;
@@ -162,10 +146,6 @@ function main(db, table, user, hostname, hostAndPort)
 
             }
         }
-        print("-------------------------------");
-
     }
     exit(result);
 }
-
-
