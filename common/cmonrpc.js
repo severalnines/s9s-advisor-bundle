@@ -1,5 +1,3 @@
-var CMONRPC_TOKEN = ["test12345", "someothertoken"];
-var FREE_HOSTS = ["10.10.11.14", "10.10.11.15", "10.10.11.16"];
 
 function setCmonrpcToken(json, clusterid) 
 {
@@ -54,10 +52,9 @@ function curl(controller, path, json)
     controller_map = controller.toMap();
     /* See if the CMONRPC token has been defined */
     json = mapToJSON(setCmonrpcToken(json, controller_map['clusterid']));
-    print (json);
     if (controller != false) {
         
-        var retval = controller.system(concatenate("curl  -XPOST -d '", json,"' http://localhost:9500/", controller_map['clusterid'],"/", path));
+        var retval = controller.system(concatenate("curl  -XPOST -d '", json,"' http://", CMONRPC_HOST, ":", CMONRPC_PORT, "/", controller_map['clusterid'],"/", path));
         if (!retval["success"])
             error("ERROR: ", retval["errorMessage"]);
         return retval["result"].replace('\n', ''); 
@@ -73,7 +70,7 @@ function addNode(node)
     var job_data = {};
     job_data["hostname"] = node;
     job_data["software_package"] = "";
-    job_data["config_template"] = "my.cnf";
+    job_data["config_template"] = "my.cnf.gtid_replication";
     job_data["install_software"] =true;
     job_data["disable_selinux"] = 1;
     job_data["disable_firewall"]=1;
@@ -83,8 +80,6 @@ function addNode(node)
     job["job_data"] = job_data;
     json["job"] = job;
     var output = curl(controller, "job", json);
-    print(JSONToMap(output));
-    
 }
 
 function match(needle, haystack)
@@ -116,12 +111,4 @@ function findUnusedHost()
     
 }
 
-function main()
-{
-    /* find unused node */
-    node = findUnusedHost();
-    addNode(node);
 
-    
-   /*addNode();*/
-}
