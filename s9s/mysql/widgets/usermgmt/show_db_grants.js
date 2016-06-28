@@ -9,6 +9,10 @@
 queryGlobalPrivs="SELECT GRANTEE, IS_GRANTABLE, "
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) FROM"
       " information_schema.user_privileges GROUP BY GRANTEE";
+
+queryGlobalPrivsWithUser="SELECT GRANTEE, IS_GRANTABLE, "
+      " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) FROM"
+      " information_schema.user_privileges WHERE GRANTEE='@@USERHOST@@' GROUP BY GRANTEE";
       
 querySchemaPrivsForUser="SELECT GRANTEE, IS_GRANTABLE,"
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE), TABLE_SCHEMA FROM"
@@ -32,6 +36,10 @@ allGlobalPrivs = "ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TABLESPACE,"
            "EVENT,EXECUTE,FILE,INDEX,INSERT,LOCK TABLES,PROCESS,REFERENCES,"
            "RELOAD,REPLICATION CLIENT,REPLICATION SLAVE,SELECT,SHOW DATABASES,"
            "SHOW VIEW,SHUTDOWN,SUPER,TRIGGER,UPDATE";
+
+extraInfoQuery = "SELECT ssl_type,max_questions,max_updates,max_connections,"
+            "max_user_connections, password_expired  FROM mysql.user "
+            "WHERE user='@@USER@@' AND host ='@@HOST@@'";
 
 /** 
 global privs 
@@ -70,9 +78,18 @@ function main(db, table, user, hostname, hostAndPort)
     }
     if (db=="*")
     {
-       query =  queryGlobalPrivs;
+        if (user!="*" && hostname !="*" )
+        {
+            query =  querySchemaPrivsForUser;
+            requestType = "SCHEMA";
+            query.replace("@@USERHOST@@", escape("'" + user + "'@'" + hostname + "'"));
+        }
+        else
+        {
+            query =  queryGlobalPrivs;
+        }        
     }
-    else if ( db!="" && db != "*")
+    else
     {
       if (table == "*")
       {
@@ -94,7 +111,7 @@ function main(db, table, user, hostname, hostAndPort)
         query = queryTablePrivs;
         requestType = "TABLE";
         query.replace("@@USERHOST@@", escape("'" + user + "'@'" + hostname + "'"));
-        query.replace("@@SCHEMA@@", db);
+          query.replace("@@SCHEMA@@", db);
       }
     }    
     
@@ -109,7 +126,8 @@ function main(db, table, user, hostname, hostAndPort)
         connected     = map["connected"];
         if (!connected)
             continue;
-            
+        
+                    
         ret = getValueMap(host, query);
         result["grants"][idx] = {};
         result["grants"][idx]["grant"]={};
@@ -143,9 +161,31 @@ function main(db, table, user, hostname, hostAndPort)
                 result["grants"][idx]["grant"][i]["privs"]=privs;
                 result["grants"][idx]["grant"][i]["schema"]=schema;
                 result["grants"][idx]["grant"][i]["table"]=table;
-
+                tmpQuery = extraInfoQuery;
+                thisUserHost = grantee.split("@");
+                tmpUser = thisUserHost[0].replace("'","");
+                tmpHost = thisUserHost[1].replace("'","");
+                tmpQuery.replace("@@USER@@", tmpUser);    
+                tmpQuery.replace("@@HOST@@", tmpHost);
+                ret2 = executeSqlCommand2(host,tmpQuery);
+                var extraInfo = getValueMap(host,tmpQuery);
+                ssl_type = extraInfo[0][0];
+                max_questions = extraInfo[0][1];
+                max_updates = extraInfo[0][2];
+                max_connections = extraInfo[0][3];
+                max_user_connections = extraInfo[0][4];
+                password_expired = extraInfo[0][5];
+                
+                result["grants"][idx]["grant"][i]["ssl_type"]=ssl_type;
+                result["grants"][idx]["grant"][i]["max_questions"]=max_questions;
+                result["grants"][idx]["grant"][i]["max_updates"]=max_updates;
+                result["grants"][idx]["grant"][i]["max_connections"]=max_connections;
+                result["grants"][idx]["grant"][i]["max_user_connections"]=max_user_connections;
+                result["grants"][idx]["grant"][i]["password_expired"]=password_expired;
             }
         }
     }
     exit(result);
 }
+
+

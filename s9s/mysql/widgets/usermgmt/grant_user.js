@@ -43,29 +43,59 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
     }
 
     var hosts = cluster::mySqlNodes();
-
+    var retval2;
+    var host;
+    var map ;
+    var connected;
+    var isGalera;
     for (idx = 0; idx < hosts.size(); ++idx)
     {
-        var retval;
-        var host = hosts[idx];
+
+        host = hosts[idx];
 
         if(!hostMatchesFilter(host,hostAndPort)){
             continue;
         }
 
-        var map = host.toMap();
-        var connected = map["connected"];
+        map = host.toMap();
+        connected = map["connected"];
 
         if (!connected) {
             continue;
         }
 
-        var isGalera  = map["isgalera"];
+        isGalera  = map["isgalera"];
         if (isGalera) {
             query = "SET WSREP_ON=ON;";
-        } else {
-            query = "SET SQL_LOG_BIN=OFF;";
+            retval2 = executeSqlCommand2(host, query);
         }
+        if (db == "*.*")
+        {
+            allGlobalPrivs = "ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TABLESPACE,"
+           "CREATE TEMPORARY TABLES,CREATE USER,CREATE VIEW,DELETE,DROP,"
+           "EVENT,EXECUTE,FILE,INDEX,INSERT,LOCK TABLES,PROCESS,REFERENCES,"
+           "RELOAD,REPLICATION CLIENT,REPLICATION SLAVE,SELECT,SHOW DATABASES,"
+           "SHOW VIEW,SHUTDOWN,SUPER,TRIGGER,UPDATE";
+          
+           var x = allGlobalPrivs.split(",");
+           var revokeList = "";
+           for (i=0; i<x.size() ; i++)
+           {
+               if(!privs.contains(x[i]))
+                  revokeList += x[i] + ",";
+           }
+           query = "REVOKE " + revokeList + " GRANT OPTION"
+                  + " ON *.* FROM '" + user + "'@'" 
+                  + hostname + "'";
+
+        }
+        else
+            query = "REVOKE ALL PRIVILEGES, GRANT OPTION"
+                  + " ON " + db 
+                  + " FROM '" + user + "'@'" 
+                  + hostname + "'";
+        print (query);
+        retval2 = executeSqlCommand2(host, query);
 
         xtraOpts = xtraOpts.toString().trim();
 
@@ -88,7 +118,7 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
                 }
             }
 
-            retval = executeSqlCommand2(host, query);
+            retval2 = executeSqlCommand2(host, query);
 
             if(doAlter) {
                 var alterQuery = "ALTER USER '" + user + "'@'" + hostname + "' " + xtraOpts.replace('WITH GRANT OPTION', 'WITH');
@@ -105,11 +135,11 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
               + " TO '" + user + "'@'" 
               + hostname + "' "+ xtraOpts;
               print("query: ",query);
-              retval = executeSqlCommand2(host, query);
+              retval2 = executeSqlCommand2(host, query);
         }
 
         if (!retval["success"]) {
-            result["error_msg"] = retval["errorMessage"];
+            result["error_msg"] = retval2["errorMessage"];
         } else {
            result["error_msg"] = "Successfully created: '" + user + "'@'" + hostname + "'";
         }   
@@ -120,3 +150,9 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
      }
      exit(result);
 }
+
+
+
+
+
+

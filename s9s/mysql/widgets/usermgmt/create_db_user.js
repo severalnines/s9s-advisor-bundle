@@ -55,23 +55,52 @@ function main(user, hostname, password, hostAndPort)
             query = "SET SQL_LOG_BIN=OFF;";
         executeSqlCommand2(host, query);
 
-        query = "CREATE USER '" + user + "'@'" + hostname + 
-                "' IDENTIFIED BY '" + password + "'";
-        //print(query);
-        
-        var retval = executeSqlCommand2(host, query);
-        print(retval);
+        query = "SELECT COUNT(user) FROM mysql.user WHERE user='" + user 
+                + "' AND host='" + hostname + "'";
+    
+        var retval = getResultSet(host,query);
+        var cnt = 0;
         if (!retval["success"])
-            result["error_msg"] = retval["errorMessage"];
+        {
+            result["error_msg"] = retval["errorMessage"]; 
+        }
         else
-           result["error_msg"] = "Created user '" + user + "'@'" + hostname + "'";
-           
-        print(host, ":");
-        print(result["error_msg"]);
+        {
+            resultSet = retval["result"];
+            cnt = resultSet[0, 0];
+        }
+        if (cnt.toInt() == 0)
+        {
+            query = "CREATE USER '" + user + "'@'" + hostname + 
+                    "' IDENTIFIED BY '" + password + "'";
+            //print(query);
+            
+            retval = executeSqlCommand2(host, query);
+            if (!retval["success"])
+                result["error_msg"] = retval["errorMessage"];
+            else
+               result["error_msg"] = "Successfully created user '" 
+                    + user + "'@'" + hostname + "'";
+        }
+        else
+        {
+            query = "SET PASSWORD FOR '" + user + "'@'" + hostname 
+                    + "' = PASSWORD('"  +  password + "')"; 
+            retval = executeSqlCommand2(host, query);
+            if (!retval["success"])
+                result["error_msg"] = retval["errorMessage"];
+            else
+               result["error_msg"] = "Successfully changed password for '" 
+                + user + "'@'" + hostname + "'";
+        }
+        print (result["error_msg"]);
         if (isGalera)
+        {
             query = "SET WSREP_ON=OFF;";
-
-        executeSqlCommand2(host, query);
+            executeSqlCommand2(host, query);
+            break;
+        }
      }
      exit(result);
 }
+

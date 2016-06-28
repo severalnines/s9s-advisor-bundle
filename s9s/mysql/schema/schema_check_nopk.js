@@ -22,7 +22,7 @@ var query2="SELECT count(table_name)"
        "NOT IN ('mysql', 'INFORMATION_SCHEMA','performance_schema', 'ndbinfo')";
        
 var MAX_TABLES=1024;
-var ANALYZE_ALL_HOSTS = 0;
+var ANALYZE_ALL_HOSTS = false;
 
 function main()
 {
@@ -42,7 +42,6 @@ function main()
         map         = host.toMap();
         connected   = map["connected"];
         var msg ="";
-
         if (!connected)
             continue;
 
@@ -60,7 +59,7 @@ function main()
                                     " using information_schema.");
             print(advice.toString("%E"));
             advisorMap[idx]= advice;
-            if (ANALYZE_ALL_HOSTS > 0)
+            if (ANALYZE_ALL_HOSTS)
                 continue;
             return advisorMap;
         }
@@ -72,7 +71,7 @@ function main()
             advice.setJustification("All tables have a PRIMARY KEY");
             advisorMap[idx]= advice;
             print(advice.toString("%E"));
-            if (ANALYZE_ALL_HOSTS > 0)
+            if (ANALYZE_ALL_HOSTS)
                 continue;
             return advisorMap;
         }
@@ -85,7 +84,7 @@ function main()
 
         for(i=0; i<ret.size(); ++i)
         {
-            if( ret[i][0] == 0)
+            if( ret[i][0] != "")
             {
                 print("<tr><td width=20%>" + ret[i][0] + "</td>"
                   "<td width=20%>" + ret[i][1] + "</td>"
@@ -97,7 +96,7 @@ function main()
 
         for(i=0; i<ret.size(); ++i)
         {
-            if( ret[i][0] == 0)
+            if( ret[i][0] != "")
                 justification = justification +  " " + ret[i][0]  + "." + ret[i][1];
         }
         if( foundNoPK )
@@ -115,11 +114,10 @@ function main()
         }
         advisorMap[idx]= advice;
         print(advice.toString("%E"));
-        if (ANALYZE_ALL_HOSTS > 0)
+        if (ANALYZE_ALL_HOSTS)
             continue;
         break;
     }
     return advisorMap;
 }
-
 

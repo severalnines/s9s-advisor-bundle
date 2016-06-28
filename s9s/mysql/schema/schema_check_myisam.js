@@ -18,7 +18,7 @@ var query2="SELECT count(table_name)"
            "NOT IN ('mysql', 'INFORMATION_SCHEMA','performance_schema', 'ndbinfo')";
 
 var MAX_TABLES=1024;
-var ANALYZE_ALL_HOSTS=0;
+var ANALYZE_ALL_HOSTS=false;
 
 function main()
 {
@@ -55,7 +55,7 @@ function main()
                                     " using information_schema.");
             print(advice.toString("%E"));
             advisorMap[idx]= advice;
-            if (ANALYZE_ALL_HOSTS > 0)
+            if (ANALYZE_ALL_HOSTS)
                 continue;
             return advisorMap;
         }
@@ -68,7 +68,7 @@ function main()
             advice.setJustification("No MYISAM table has been detected.");
             advisorMap[idx]= advice;
             print(advice.toString("%E"));
-            if (ANALYZE_ALL_HOSTS > 0)
+            if (ANALYZE_ALL_HOSTS)
                 continue;
             return advisorMap;
         }
@@ -98,9 +98,10 @@ function main()
         advice.setJustification(justification);
         print(advice.toString("%E"));
         advisorMap[idx]= advice;
-        if (ANALYZE_ALL_HOSTS > 0)
+        if (ANALYZE_ALL_HOSTS)
             continue;
         break;
     }
     return advisorMap;
 }
+

@@ -1,4 +1,5 @@
 #include "common/mysql_helper.js"
+#include "common/helpers.js"
 #include "cmon/alarms.h"
 /**
  * Checks if a user does not have a password.
@@ -24,8 +25,12 @@ function main()
         print("   ");
         print(host);
         print("==========================");
+        var q = "SELECT COUNT(*) FROM mysql.user WHERE password=''";
+        if (isMySql57Host(host))
+            q = "SELECT COUNT(*) FROM mysql.user WHERE authentication_string=''";
+            
         ret = getSingleValue(host, 
-                           "SELECT COUNT(*) FROM mysql.user WHERE password=''");
+                           q);
         if (ret == false)
         {
             advice.setJustification("Did not find any account"

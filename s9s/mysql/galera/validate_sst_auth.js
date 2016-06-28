@@ -1,4 +1,3 @@
-
 #include "common/mysql_helper.js"
 //#include "common/helpers.js"
 
@@ -7,8 +6,6 @@
  * Compares [xtrabackup] password with wsrep_sst_auth
  */
  
-var WARNING_THRESHOLD=4;
-
 function readRemoteConfigValue(config, section, variableName)
 {
     var variables    = config.variable(variableName.toString());
@@ -42,10 +39,10 @@ function main()
         if(host.nodeType() != "galera")
             continue;
         var config = host.config();
-        var wsrepSstAuth = readRemoteConfigValue(config, "mysqld","wsrep_sst_auth");
+        var wsrepSstAuth = readRemoteConfigValue(config, "","wsrep_sst_auth");
         var wsrepXtrabackupPass = readRemoteConfigValue(config, "xtrabackup", "password");
         var wsrepXtrabackupUser = readRemoteConfigValue(config, "xtrabackup", "user");
-        var wsrepSstMethod = readRemoteConfigValue(config, "mysqld","wsrep_sst_method");
+        var wsrepSstMethod = readRemoteConfigValue(config, "","wsrep_sst_method");
         
     
         if (wsrepXtrabackupUser == "" || 
@@ -72,10 +69,19 @@ function main()
                 advice.setSeverity(Warning);
                 msg = "wsrep_sst_auth could not be read or is not set."
                       "Check the configuration file in Manage->Configurations.";
-                advice.setJustification(justification);   
+                advice.setJustification(justification); 
+                advice.setSeverity(Warning);
             }
             else
             {
+                var regex = /"+/g;
+                var regex2 = /'+/g;
+
+                tmp = wsrepSstAuth.replace(regex, "");
+                tmp = wsrepSstAuth.replace(regex, "");
+                tmp = wsrepSstAuth.replace(regex2, "");
+                tmp = wsrepSstAuth.replace(regex2, "");
+
                 tmp  = wsrepSstAuth.split(":");
                 user = tmp[0];
                 password = tmp[1];
@@ -90,6 +96,8 @@ function main()
                       "Check the configuration file in Manage->Configurations.";   
                     advice.setJustification(justification);
                     host.raiseAlarm(MySqlAdvisor, Warning, justification);
+                    advice.setSeverity(Critical);
+
                 }
                 else
                 {
@@ -98,6 +106,8 @@ function main()
                     " and in group [xtrabackup]";
                     advice.setJustification(justification);
                     host.clearAlarm(MySqlAdvisor);
+                    advice.setSeverity(Ok);
+
                 }
             }
         }
