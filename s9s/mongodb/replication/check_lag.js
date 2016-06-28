@@ -17,6 +17,7 @@ function main(hostAndPort) {
         hostAndPort = "*";
 
     var hosts   = cluster::mongoNodes();
+    var advisorMap = {};
     var result= [];
     var k = 0;
     var advice = new CmonAdvice();
@@ -65,5 +66,5 @@ function main(hostAndPort) {
         advice.setAdvice(msg);
         advisorMap[i]= advice;
     }
-    //res= host.executeMongoQuery("{currentOp : 1 }");
+    return advisorMap;
 }
