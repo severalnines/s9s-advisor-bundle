@@ -23,6 +23,7 @@ function main(hostAndPort) {
         hostAndPort = "*";
 
     var hosts   = cluster::mongoNodes();
+    var advisorMap = {};
     var result= [];
     var msg = "";
     var endTime   = CmonDateTime::currentDateTime();
@@ -64,6 +65,7 @@ function main(hostAndPort) {
         advice.setAdvice(msg);
         advisorMap[i]= advice;
     }
+    return advisorMap;
 }
  
 
