@@ -22,16 +22,18 @@ function main(hostAndPort) {
     var k = 0;
     var advice = new CmonAdvice();
     var msg = "";
+    var optime_nodes = [];
     for (i = 0; i < hosts.size(); i++)
     {
         // Find the master and execute the queries there
         host = hosts[i];
-        res = host.executeMongoQuery("{isMaster: 1}");
+        res = host.executeMongoQuery("admin", "{isMaster: 1}");
+
         if (res["result"]["ismaster"] == true) {
             master_host = host;
             optime_master = 0;
-            optime_nodes = [];
-            res = host.executeMongoQuery("{ replSetGetStatus: 1 }");
+
+            res = host.executeMongoQuery("admin","{ replSetGetStatus: 1 }");
             // Fetch the optime per host
             for(o = 0; o < res["result"]["members"].size(); o++)
             {
@@ -44,27 +46,31 @@ function main(hostAndPort) {
                 optime_nodes[o] = {};
                 optime_nodes[o]["name"] = node_status["name"];
                 optime_nodes[o]["optime"] = node_status["optime"]["ts"]["$timestamp"]["t"];
-                    
+
             }
-            // Check if any of the hosts is lagging
-            for(o = 0; o < optime_nodes.size(); o++)
-            {
-                replication_lag = optime_nodes[optime_master]["optime"] - optime_nodes[o]["optime"];
-                if(replication_lag > WARNING_LAG_SECONDS)
-                {
-                    advice.setSeverity(Warning);
-                    msg = ADVICE_WARNING + "Host " + optime_nodes[o]["name"] + " has a replication lag of " + replication_lag + " seconds.";
-                }
-            }
-            
-            if (advice.severity() <= 0) {
-                advice.setSeverity(Ok);
-            }
+
+        }
+    }
+
+    // Check if any of the hosts is lagging
+    for(o = 0; o < optime_nodes.size(); o++)
+    {
+        host = optime_nodes[o]["name"];
+        replication_lag = optime_nodes[optime_master]["optime"] - optime_nodes[o]["optime"];
+        if(replication_lag > WARNING_LAG_SECONDS)
+        {
+            advice.setSeverity(Warning);
+            msg = ADVICE_WARNING + "Host " + optime_nodes[o]["name"] + " has a replication lag of " + replication_lag + " seconds.";
+        }
+        else
+        {
+            advice.setSeverity(Ok);
+            msg = "Host " + optime_nodes[o]["name"] + " has a replication lag of " + replication_lag + " seconds.";
         }
         advice.setHost(host);
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
-        advisorMap[i]= advice;
+        advisorMap[o]= advice;
     }
     return advisorMap;
 }
