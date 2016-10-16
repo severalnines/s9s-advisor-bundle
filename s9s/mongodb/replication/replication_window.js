@@ -122,16 +122,16 @@ function getReplicationStatus(host, primary_id) {
 }
 
 function getReplicationWindow(host) {
-  var replwindow = {};
-  replwindow['newset'] = false;
-  // Fetch the first and last record from the Oplog and take it's timestamp
-  var res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: 1}, limit: 1}');
-  replwindow['first'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
-  if (res["result"]["cursor"]["firstBatch"][0]["o"]["msg"] == "initiating set") {
-      replwindow['newset'] = true;
-  }
-  res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: -1}, limit: 1}');
-  replwindow['last'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
-  replwindow['replwindow'] = replwindow['last'] - replwindow['first'];
-  return replwindow;
+    var replwindow = {};
+    replwindow['newset'] = false;
+    // Fetch the first and last record from the Oplog and take it's timestamp
+    var res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: 1}, limit: 1}');
+    replwindow['first'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
+    if (res["result"]["cursor"]["firstBatch"][0]["o"]["msg"] == "initiating set") {
+        replwindow['newset'] = true;
+    }
+    res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: -1}, limit: 1}');
+    replwindow['last'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
+    replwindow['replwindow'] = replwindow['last'] - replwindow['first'];
+    return replwindow;
 }
