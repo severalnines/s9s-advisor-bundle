@@ -43,10 +43,15 @@ function main(hostAndPort) {
             // Only retrieve the replication status from the master
             res = host.executeMongoQuery("admin", "{isMaster: 1}");
             if (res["result"]["ismaster"] == true) {
-                replstatus_per_node = getReplicationStatus(host, host_id);
+                //Store the result temporary and then merge with the replication status per node
+                var tmp = getReplicationStatus(host, host_id);
+                for(o=0; o < tmp.size(); o++) {
+                    replstatus_per_node[tmp[o]['name']] = tmp[o];
+                }
+
+                //replstatus_per_node =
             }
         }
-        print (replwindow_per_node[host_id]);
     }
 
     for (i = 0; i < hosts.size(); i++)
@@ -62,18 +67,18 @@ function main(hostAndPort) {
         replwindow_node = replstatus['optime'] - replwindow_per_node[primary_id]['first'];
         // First check uptime. If the node is up less than our replication window it is probably no use warning
         if(replwindow['newset'] == true) {
-            msg = "Host " + host_id + " (" + replstatus["setname"] + ") is a new replicaSet. Not enough entries in the oplog to determine the replication window.";
-            advice.setSeverity(Ok);
-            advice.setJustification("");
+          msg = "Host " + host_id + " (" + replstatus["setname"] + ") is a new replicaSet. Not enough entries in the oplog to determine the replication window.";
+          advice.setSeverity(Ok);
+          advice.setJustification("");
         } else if (replstatus["uptime"] < WARNING_REPL_WINDOW) {
             msg = "Host " + host_id + " (" + replstatus["setname"] + ") only has an uptime of " + replstatus["uptime"] + " seconds. Too early to determine the replication window.";
             advice.setSeverity(Ok);
             advice.setJustification("");
         }
         else if (replwindow['max'] < (CmonDateTime::currentDateTime().toString("%s") - WARNING_REPL_WINDOW)) {
-            msg = "Latest entry in the oplog for host " + host_id + " (" + replstatus["setname"] + ") is older than " + WARNING_REPL_WINDOW + " seconds. Determining the replication window would be unreliable.";
-            advice.setSeverity(Ok);
-            advice.setJustification("");
+          msg = "Latest entry in the oplog for host " + host_id + " (" + replstatus["setname"] + ") is older than " + WARNING_REPL_WINDOW + " seconds. Determining the replication window would be unreliable.";
+          advice.setSeverity(Ok);
+          advice.setJustification("");
         }
         else {
             // Check if any of the hosts is within the oplog window
@@ -110,28 +115,27 @@ function getReplicationStatus(host, primary_id) {
     for(i = 0; i < res["result"]["members"].size(); i++)
     {
         tmp = res["result"]["members"][i];
-        host_id = tmp["name"];
-        node_status[host_id] = {};
-        node_status[host_id]["name"] = host_id;
-        node_status[host_id]["primary"] = primary_id;
-        node_status[host_id]["setname"] = res["result"]["set"];
-        node_status[host_id]["uptime"] = tmp["uptime"];
-        node_status[host_id]["optime"] = tmp["optime"]["ts"]["$timestamp"]["t"];
+        node_status[i] = {};
+        node_status[i]["name"] = tmp["name"];;
+        node_status[i]["primary"] = primary_id;
+        node_status[i]["setname"] = res["result"]["set"];
+        node_status[i]["uptime"] = tmp["uptime"];
+        node_status[i]["optime"] = tmp["optime"]["ts"]["$timestamp"]["t"];
     }
     return node_status;
 }
 
 function getReplicationWindow(host) {
-    var replwindow = {};
-    replwindow['newset'] = false;
-    // Fetch the first and last record from the Oplog and take it's timestamp
-    var res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: 1}, limit: 1}');
-    replwindow['first'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
-    if (res["result"]["cursor"]["firstBatch"][0]["o"]["msg"] == "initiating set") {
-        replwindow['newset'] = true;
-    }
-    res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: -1}, limit: 1}');
-    replwindow['last'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
-    replwindow['replwindow'] = replwindow['last'] - replwindow['first'];
-    return replwindow;
+  var replwindow = {};
+  replwindow['newset'] = false;
+  // Fetch the first and last record from the Oplog and take it's timestamp
+  var res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: 1}, limit: 1}');
+  replwindow['first'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
+  if (res["result"]["cursor"]["firstBatch"][0]["o"]["msg"] == "initiating set") {
+      replwindow['newset'] = true;
+  }
+  res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: -1}, limit: 1}');
+  replwindow['last'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
+  replwindow['replwindow'] = replwindow['last'] - replwindow['first'];
+  return replwindow;
 }
