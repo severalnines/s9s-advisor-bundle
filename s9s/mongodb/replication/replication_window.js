@@ -43,7 +43,6 @@ function main(hostAndPort) {
             // Only retrieve the replication status from the master
             res = host.executeMongoQuery("admin", "{isMaster: 1}");
             if (res["result"]["ismaster"] == true) {
-                //Store the result temporary and then merge with the replication status per node
                 var tmp = getReplicationStatus(host, host_id);
                 for(o=0; o < tmp.size(); o++) {
                     replstatus_per_node[tmp[o]['name']] = tmp[o];
@@ -56,54 +55,57 @@ function main(hostAndPort) {
 
     for (i = 0; i < hosts.size(); i++)
     {
-        msg = ADVICE_OK;
         host = hosts[i];
-        host_id = host.hostName() + ":" + host.port();
-        primary_id = replstatus_per_node[host_id]['primary'];
-        replwindow = replwindow_per_node[host_id];
-        replstatus = replstatus_per_node[host_id];
+        if (host.role() == "shardsvr" || host.role() == "configsvr") {
+            msg = ADVICE_OK;
 
-        // Calculate the replication window of the primary against the node's last transaction
-        replwindow_node = replstatus['optime'] - replwindow_per_node[primary_id]['first'];
-        // First check uptime. If the node is up less than our replication window it is probably no use warning
-        if(replwindow['newset'] == true) {
-          msg = "Host " + host_id + " (" + replstatus["setname"] + ") is a new replicaSet. Not enough entries in the oplog to determine the replication window.";
-          advice.setSeverity(Ok);
-          advice.setJustification("");
-        } else if (replstatus["uptime"] < WARNING_REPL_WINDOW) {
-            msg = "Host " + host_id + " (" + replstatus["setname"] + ") only has an uptime of " + replstatus["uptime"] + " seconds. Too early to determine the replication window.";
-            advice.setSeverity(Ok);
-            advice.setJustification("");
-        }
-        else if (replwindow['max'] < (CmonDateTime::currentDateTime().toString("%s") - WARNING_REPL_WINDOW)) {
-          msg = "Latest entry in the oplog for host " + host_id + " (" + replstatus["setname"] + ") is older than " + WARNING_REPL_WINDOW + " seconds. Determining the replication window would be unreliable.";
-          advice.setSeverity(Ok);
-          advice.setJustification("");
-        }
-        else {
-            // Check if any of the hosts is within the oplog window
-            if(replwindow_node < CRITICAL_REPL_WINDOW) {
-                advice.setSeverity(Critical);
-                msg = ADVICE_CRITICAL + "Host " + host_id + " (" + replstatus["setname"] + ") has a replication window of " + replwindow_node + " seconds.";
-                advice.setJustification(JUSTIFICATION_CRITICAL);
-            } else {
-                if(replwindow_node < WARNING_REPL_WINDOW)
-                {
-                    advice.setSeverity(Warning);
-                    msg = ADVICE_WARNING + "Host " + host_id + " (" + replstatus["setname"] + ") has a replication window of " + replwindow_node + " seconds.";
-                    advice.setJustification(JUSTIFICATION_WARNING);
+            host_id = host.hostName() + ":" + host.port();
+            primary_id = replstatus_per_node[host_id]['primary'];
+            replwindow = replwindow_per_node[host_id];
+            replstatus = replstatus_per_node[host_id];
+
+            // Calculate the replication window of the primary against the node's last transaction
+            replwindow_node = replstatus['optime'] - replwindow_per_node[primary_id]['first'];
+            // First check uptime. If the node is up less than our replication window it is probably no use warning
+            if(replwindow['newset'] == true) {
+              msg = "Host " + host_id + " (" + replstatus["setname"] + ") is a new replicaSet. Not enough entries in the oplog to determine the replication window.";
+              advice.setSeverity(Ok);
+              advice.setJustification("");
+            } else if (replstatus["uptime"] < WARNING_REPL_WINDOW) {
+                msg = "Host " + host_id + " (" + replstatus["setname"] + ") only has an uptime of " + replstatus["uptime"] + " seconds. Too early to determine the replication window.";
+                advice.setSeverity(Ok);
+                advice.setJustification("");
+            }
+            else if (replwindow['max'] < (CmonDateTime::currentDateTime().toString("%s") - WARNING_REPL_WINDOW)) {
+              msg = "Latest entry in the oplog for host " + host_id + " (" + replstatus["setname"] + ") is older than " + WARNING_REPL_WINDOW + " seconds. Determining the replication window would be unreliable.";
+              advice.setSeverity(Ok);
+              advice.setJustification("");
+            }
+            else {
+                // Check if any of the hosts is within the oplog window
+                if(replwindow_node < CRITICAL_REPL_WINDOW) {
+                    advice.setSeverity(Critical);
+                    msg = ADVICE_CRITICAL + "Host " + host_id + " (" + replstatus["setname"] + ") has a replication window of " + replwindow_node + " seconds.";
+                    advice.setJustification(JUSTIFICATION_CRITICAL);
                 } else {
-                    msg = "The replication window for node " + host_id + " (" + replstatus["setname"] + ") is long enough.";
-                    advice.setSeverity(Ok);
-                    advice.setJustification("");
+                    if(replwindow_node < WARNING_REPL_WINDOW)
+                    {
+                        advice.setSeverity(Warning);
+                        msg = ADVICE_WARNING + "Host " + host_id + " (" + replstatus["setname"] + ") has a replication window of " + replwindow_node + " seconds.";
+                        advice.setJustification(JUSTIFICATION_WARNING);
+                    } else {
+                        msg = "The replication window for node " + host_id + " (" + replstatus["setname"] + ") is long enough.";
+                        advice.setSeverity(Ok);
+                        advice.setJustification("");
+                    }
                 }
             }
-        }
 
-        advice.setHost(host);
-        advice.setTitle(TITLE);
-        advice.setAdvice(msg);
-        advisorMap[i]= advice;
+            advice.setHost(host);
+            advice.setTitle(TITLE);
+            advice.setAdvice(msg);
+            advisorMap[i]= advice;
+        }
     }
     return advisorMap;
 }
