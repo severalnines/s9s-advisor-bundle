@@ -36,7 +36,7 @@ function main(hostAndPort) {
                 for (i=0; i<ret.size(); ++i)
                 {
                     result["status"]["global"][idx][i]={};
-                    result["status"]["global"][idx][i]["variable_name"]=ret[i][0];
+                    result["status"]["global"][idx][i]["variable_name"]=linkify(ret[i][0]);
                     result["status"]["global"][idx][i]["value"]=ret[i][1];
 
                 }
@@ -44,5 +44,17 @@ function main(hostAndPort) {
         }
     }
     exit(result);
+}
+
+function linkify(x)
+{
+    if(x.toUpperCase().startsWith("COM"))
+       return "<a href=https://dev.mysql.com/doc/refman/5.7/en/server-status-variables.html#statvar_" + "Com_xxx" + " target=_blank>" + x + "</a>" ;  
+    else if (x.toUpperCase().startsWith("AUDIT"))
+        return "<a href=https://dev.mysql.com/doc/refman/5.7/en/audit-log-reference.html#statvar_" + x + " target=_blank>" + x + "</a>" ;  
+    else if (x.toUpperCase().startsWith("MYSQLX"))
+        return "<a href=https://dev.mysql.com/doc/refman/5.7/en/x-plugin-monitoring-status-variables.html#statvar_" + x + " target=_blank>" + x + "</a>" ;  
+    else
+        return "<a href=https://dev.mysql.com/doc/refman/5.7/en/server-status-variables.html#statvar_" + x + " target=_blank>" + x + "</a>" ;  
 }
 
