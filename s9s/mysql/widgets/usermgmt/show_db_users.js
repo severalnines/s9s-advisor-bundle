@@ -3,7 +3,7 @@
 #include "cmon/alarms.h"
 
  
-query="SELECT user, host, password FROM mysql.user";
+query="SELECT user, host FROM mysql.user WHERE user <> 'cmon'";
 
 /*
 * get a list of mysql user and hosts
@@ -44,6 +44,6 @@ function main(hostAndPort)
             }
         }
     }
+    print(result);
     exit(result);
 }
-

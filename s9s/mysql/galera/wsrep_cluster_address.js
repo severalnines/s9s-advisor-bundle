@@ -27,6 +27,14 @@ function main()
         var config      = host.config();
         var variable = config.variable("wsrep_cluster_address");
         var value = variable[0]["value"];
+        if (value == #N/A)
+        {
+            advice.setSeverity(Ok);
+            advice.setJustification("Could not read the wsrep_cluster_address.");
+            advice.setAdvice("No action needed.");
+            advisorMap[idx]= advice;
+            continue;
+        }
         var origValue  = value;
         origValue.replace('"',"");
         value.replace("'","");

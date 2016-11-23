@@ -10,9 +10,10 @@ fi
 if [ -d $dir ]; then
    tar cvfz `basename $dir`.tar.gz $dir
    if [ $? -eq 0 ]; then 
-      echo "Created $dir.tar.gz"
+      x=`pwd`/`basename $dir`.tar.gz
+      echo "Created $x"
       echo "Import the file:"
-      echo "    `pwd`/$dir.tar.gz"
+      echo "    $x"
       echo "in the UI: Manage -> Developer Studio -> Import"
       exit 0
    else

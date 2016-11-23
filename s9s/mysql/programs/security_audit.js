@@ -86,6 +86,7 @@ function main()
             {
                 if (!ret[i][1].toString().looksIpAddress() &&  
                    !(ret[i][1].toString() == "localhost" || 
+                    (ret[i][1].toString() == "::1") ||
                      ret[i][1].toString().contains("%")))
                 {
                     print(host, ": '" + ret[i][0] + "'@'" + ret[i][1] + 
@@ -96,4 +97,3 @@ function main()
         print("   ");
     }
 }
-

@@ -5,12 +5,14 @@
 
 /**
  * Show grants for users
- */ 
-
-
+ */
 queryGlobalPrivs="SELECT GRANTEE, IS_GRANTABLE, "
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) FROM"
       " information_schema.user_privileges GROUP BY GRANTEE";
+
+queryGlobalPrivsWithUser="SELECT GRANTEE, IS_GRANTABLE, "
+      " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) FROM"
+      " information_schema.user_privileges WHERE GRANTEE='@@USERHOST@@' GROUP BY GRANTEE";
       
 querySchemaPrivsForUser="SELECT GRANTEE, IS_GRANTABLE,"
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE), TABLE_SCHEMA FROM"
@@ -35,6 +37,10 @@ allGlobalPrivs = "ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TABLESPACE,"
            "RELOAD,REPLICATION CLIENT,REPLICATION SLAVE,SELECT,SHOW DATABASES,"
            "SHOW VIEW,SHUTDOWN,SUPER,TRIGGER,UPDATE";
 
+extraInfoQuery = "SELECT ssl_type,max_questions,max_updates,max_connections,"
+            "max_user_connections, password_expired  FROM mysql.user "
+            "WHERE user='@@USER@@' AND host ='@@HOST@@'";
+
 /** 
 global privs 
    db = * && table = * && user = * && host=*  : check all databases
@@ -50,8 +56,6 @@ privs on a particular database for a particular table for a particular user host
    db = dbname && table = tablename && user = value && host = value 
 */
     
-
-
 function main(db, table, user, hostname, hostAndPort)
 {
     var hosts     = cluster::mySqlNodes();
@@ -63,7 +67,6 @@ function main(db, table, user, hostname, hostAndPort)
         user.empty())
     {
         result["error_msg"] = "Argument 'user' not specified"; 
-        print(result["error_msg"]);
         exit(result);
     }
     
@@ -71,14 +74,22 @@ function main(db, table, user, hostname, hostAndPort)
         hostname.empty())
     {
         result["error_msg"] = "Argument 'hostname' not specified"; 
-        print(result["error_msg"]);
         exit(result);
     }
     if (db=="*")
     {
-       query =  queryGlobalPrivs;
+        if (user!="*" && hostname !="*" )
+        {
+            query =  querySchemaPrivsForUser;
+            requestType = "SCHEMA";
+            query.replace("@@USERHOST@@", escape("'" + user + "'@'" + hostname + "'"));
+        }
+        else
+        {
+            query =  queryGlobalPrivs;
+        }        
     }
-    else if ( db!="" && db != "*")
+    else
     {
       if (table == "*")
       {
@@ -100,7 +111,7 @@ function main(db, table, user, hostname, hostAndPort)
         query = queryTablePrivs;
         requestType = "TABLE";
         query.replace("@@USERHOST@@", escape("'" + user + "'@'" + hostname + "'"));
-        query.replace("@@SCHEMA@@", db);
+          query.replace("@@SCHEMA@@", db);
       }
     }    
     
@@ -115,14 +126,13 @@ function main(db, table, user, hostname, hostAndPort)
         connected     = map["connected"];
         if (!connected)
             continue;
-            
+        
+                    
         ret = getValueMap(host, query);
         result["grants"][idx] = {};
         result["grants"][idx]["grant"]={};
         result["grants"][idx]["grant"]["hostname"] = host.hostName();
         result["grants"][idx]["grant"]["port"] = host.port();
-        print (host);
-        print(" ");
 
         if (ret != false && ret.size() > 0)
         {
@@ -145,25 +155,35 @@ function main(db, table, user, hostname, hostAndPort)
                     table = ret[i][3];
                 }
 
-                 
-                print("Grantee: " + grantee );
-                print("Privileges: " + privs );
-                print("With GRANT OPTION: " + is_grantable );
-                print("Schema: " + schema);
-                print("Table: " + table);
-
-                print(" ");
                 result["grants"][idx]["grant"][i]={};
                 result["grants"][idx]["grant"][i]["grantee"]=grantee;
                 result["grants"][idx]["grant"][i]["is_grantable"]=is_grantable;
                 result["grants"][idx]["grant"][i]["privs"]=privs;
                 result["grants"][idx]["grant"][i]["schema"]=schema;
                 result["grants"][idx]["grant"][i]["table"]=table;
-
+                tmpQuery = extraInfoQuery;
+                thisUserHost = grantee.split("@");
+                tmpUser = thisUserHost[0].replace("'","");
+                tmpHost = thisUserHost[1].replace("'","");
+                tmpQuery.replace("@@USER@@", tmpUser);    
+                tmpQuery.replace("@@HOST@@", tmpHost);
+                ret2 = executeSqlCommand2(host,tmpQuery);
+                var extraInfo = getValueMap(host,tmpQuery);
+                ssl_type = extraInfo[0][0];
+                max_questions = extraInfo[0][1];
+                max_updates = extraInfo[0][2];
+                max_connections = extraInfo[0][3];
+                max_user_connections = extraInfo[0][4];
+                password_expired = extraInfo[0][5];
+                
+                result["grants"][idx]["grant"][i]["ssl_type"]=ssl_type;
+                result["grants"][idx]["grant"][i]["max_questions"]=max_questions;
+                result["grants"][idx]["grant"][i]["max_updates"]=max_updates;
+                result["grants"][idx]["grant"][i]["max_connections"]=max_connections;
+                result["grants"][idx]["grant"][i]["max_user_connections"]=max_user_connections;
+                result["grants"][idx]["grant"][i]["password_expired"]=password_expired;
             }
         }
-        print("-------------------------------");
-
     }
     exit(result);
 }

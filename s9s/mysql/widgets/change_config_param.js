@@ -23,10 +23,12 @@ function main(hostlist, section, key, newValue)
     
     var changeHostsArray = hostlist.split(",");
     var hostName = "";
+    var msg = "";
     var found;
     for (i = 0; i < changeHostsArray.size(); i++)
     {
         found = false;
+        msg = "";
         hostAndPort = changeHostsArray[i];
         hostAndPortArr = hostAndPort.split(":");
         hostName = hostAndPortArr[0];
@@ -58,6 +60,18 @@ function main(hostlist, section, key, newValue)
         {
             mysqldSection = true;
         }
+        // a better test is needed here, since what we really want to check
+        // is if the host is reachable from ssh.
+        if (!connected)
+        {
+            result[i]["result"]["success"] = false ;
+            result[i]["result"]["errorMessage"] = host.hostName() + ":" + 
+                                                          host.port() + 
+                                                          " is not reachable." +
+                                                          " Skipping this server";
+            continue;
+        }
+
         if (connected)
         {
             var oldValue = "";
@@ -118,46 +132,41 @@ function main(hostlist, section, key, newValue)
                        + key + "=" + newValue  + " in section [" + section  + "].<br/>"; 
             if (mysqldSection)
                 msg = msg + " Previous value was " + oldValue + ".<br/>";
-                       
-            var config      = host.config();
-            error  = config.errorMessage();
-            
-            value = config.setVariable(section, key, newValue);
-            config.save();
-            
-            if (result[i]["result"]["restartNeeded"])
-            {
-                msg = msg + " The change has been persisted in the config file.<br/>";
-                msg = msg + " <b>A restart of the DB node is required for the"
-                          + " change to take effect</b>.";
-            }
-            else
-            {
-                if (setglobal)
-                    msg = msg + " The change has been persisted in the config file"
-                              + " and successfully set with SET GLOBAL.<br/>"  
-                              + "<b>No DB node restart is required</b>.";
-                else
-                    msg = msg + " The change has been persisted in the config file.<br/>"
-                                  + "<b>No DB node restart is required</b>.";
-            }
-            result[i]["result"]["errorMessage"] = msg; 
-            if(error != "Success.")
-            {
-                result[i]["result"]["success"] = false;
-                result[i]["result"]["errorMessage"] = error; 
-            }
-            else
-                result[i]["result"]["success"] = true; 
-
+         
+        }
+        var config      = host.config();
+        error  = config.errorMessage();
+        
+        value = config.setVariable(section, key, newValue);
+        config.save();
+        
+        if (result[i]["result"]["restartNeeded"]  || !connected)
+        {
+            msg = msg + " The change has been persisted in the config file.<br/>";
+            msg = msg + " <b>A restart of the DB node is required for the"
+                + " change to take effect</b>.";
+            if (!connected)
+               result[i]["result"]["restartNeeded"] = true;
         }
         else
         {
-            result[i]["result"]["errorMessage"] = host.hostName() + ":" + 
-                                                  host.port() + " :  not connected, no change made.";
-            result[i]["result"]["success"] = false; 
+            if (setglobal)
+                msg = msg + " The change has been persisted in the config file"
+                + " and successfully set with SET GLOBAL.<br/>"  
+                + "<b>No DB node restart is required</b>.";
+            else
+                msg = msg + " The change has been persisted in the config file.<br/>"
+                + "<b>No DB node restart is required</b>.";
         }
-    }
+        result[i]["result"]["errorMessage"] = msg; 
+        if(error != "Success.")
+        {
+            result[i]["result"]["success"] = false;
+            result[i]["result"]["errorMessage"] = error; 
+        }
+        else
+            result[i]["result"]["success"] = true;         
+    }   
     return result;
 }
 

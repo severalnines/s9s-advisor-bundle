@@ -59,6 +59,12 @@ function getSingleValue(host1, _query)
     return value;
 }
 
+function getResultSet(host1, _query)
+{
+    retval       = host1.executeSqlQuery(_query);
+    return retval;
+}
+
 function getValueMap(host1, _query)
 {
 
