@@ -8,28 +8,28 @@
  */
 queryGlobalPrivs="SELECT GRANTEE, IS_GRANTABLE, "
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) FROM"
-      " information_schema.user_privileges GROUP BY GRANTEE";
+      " information_schema.user_privileges GROUP BY GRANTEE, IS_GRANTABLE";
 
 queryGlobalPrivsWithUser="SELECT GRANTEE, IS_GRANTABLE, "
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE) FROM"
-      " information_schema.user_privileges WHERE GRANTEE='@@USERHOST@@' GROUP BY GRANTEE";
+      " information_schema.user_privileges WHERE GRANTEE='@@USERHOST@@' GROUP BY GRANTEE, IS_GRANTABLE";
       
 querySchemaPrivsForUser="SELECT GRANTEE, IS_GRANTABLE,"
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE), TABLE_SCHEMA FROM"
       " information_schema.schema_privileges WHERE GRANTEE='@@USERHOST@@'"
-      " GROUP BY TABLE_SCHEMA";
+      " GROUP BY GRANTEE, IS_GRANTABLE,TABLE_SCHEMA";
      
 querySchemaPrivsForSchema="SELECT GRANTEE, IS_GRANTABLE,"
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE), TABLE_SCHEMA FROM"
       " information_schema.schema_privileges WHERE TABLE_SCHEMA='@@SCHEMA@@'"
-      " GROUP BY GRANTEE";
+      " GROUP BY GRANTEE, IS_GRANTABLE,TABLE_SCHEMA";
       
       
 queryTablePrivs="SELECT GRANTEE, IS_GRANTABLE,"
       " GROUP_CONCAT(PRIVILEGE_TYPE ORDER BY PRIVILEGE_TYPE), TABLE_NAME FROM"
       " information_schema.table_privileges WHERE GRANTEE='@@USERHOST@@'"
       " AND TABLE_SCHEMA='@@SCHEMA@@'"
-      " GROUP BY TABLE_NAME";
+      " GROUP BY GRANTEE,IS_GRANTABLE, TABLE_NAME";
 
 allGlobalPrivs = "ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TABLESPACE,"
            "CREATE TEMPORARY TABLES,CREATE USER,CREATE VIEW,DELETE,DROP,"
@@ -42,9 +42,11 @@ extraInfoQuery = "SELECT ssl_type,max_questions,max_updates,max_connections,"
             "WHERE user='@@USER@@' AND host ='@@HOST@@'";
 
 /** 
+ *
+
 global privs 
    db = * && table = * && user = * && host=*  : check all databases
-
+   db = * table = * backupuser 127.0.0.1 *
 privs on a particular database for a particular user host 
   db = anyvalue && table = *  && user = value && host = value 
   
@@ -78,7 +80,14 @@ function main(db, table, user, hostname, hostAndPort)
     }
     if (db=="*")
     {
-        if (user!="*" && hostname !="*" )
+        if (table == "*" && user != "*" && hostname != "*")
+        {
+            query = queryGlobalPrivsWithUser;
+            requestType = "GLOBAL";
+            query.replace("@@USERHOST@@", escape("'" + user + "'@'" + hostname + "'"));
+        
+        }
+        else if (user!="*" && hostname !="*" )
         {
             query =  querySchemaPrivsForUser;
             requestType = "SCHEMA";
@@ -126,7 +135,6 @@ function main(db, table, user, hostname, hostAndPort)
         connected     = map["connected"];
         if (!connected)
             continue;
-        
                     
         ret = getValueMap(host, query);
         result["grants"][idx] = {};
@@ -187,5 +195,3 @@ function main(db, table, user, hostname, hostAndPort)
     }
     exit(result);
 }
-
-
