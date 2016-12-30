@@ -31,6 +31,11 @@ function main()
             continue;
         if (!readVariable(host, "performance_schema").toBoolean())
         {
+            advice.setHost(host);
+            advice.setTitle(TITLE);
+            advice.setAdvice("Nothing to check.");
+            advice.setJustification("performance_schema is not enabled");
+            advisorMap[idx]= advice;
             print(host, ": performance_schema is not enabled.");
             continue;
         }

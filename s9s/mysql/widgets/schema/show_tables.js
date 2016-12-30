@@ -22,15 +22,16 @@ function main(db, hostAndPort) {
     result["tables"] = {};
 
     var hosts = cluster::mySqlNodes();
+    var k = 0;
     for (idx = 0; idx < hosts.size(); ++idx) {
         host = hosts[idx];
         if(hostAndPort != "*" && !hostMatchesFilter(host,hostAndPort))
             continue;
 
-        result["tables"][idx] = {};
-        result["tables"][idx]["host"]={};
-        result["tables"][idx]["host"]["hostname"] = host.hostName();
-        result["tables"][idx]["host"]["port"] = host.port();
+        result["tables"][k] = {};
+        result["tables"][k]["host"]={};
+        result["tables"][k]["host"]["hostname"] = host.hostName();
+        result["tables"][k]["host"]["port"] = host.port();
 
         map = host.toMap();
         connected = map["connected"];
@@ -45,18 +46,19 @@ function main(db, hostAndPort) {
                       "</tr>");                
                 for (i=0; i<ret.size(); ++i)
                 {
-                    result["tables"][idx][i] =  ret[i][0];
+                    result["tables"][k][i] =  ret[i][0];
                     print("<tr><td>" + ret[i][0] + "&nbsp;&nbsp;</td>"
                           "</td></tr>");
                 }
-                result["tables"][idx]["table_cnt"] =  ret.size();
-                result["tables"][idx]["schema"] =  db;               
+                result["tables"][k]["table_cnt"] =  ret.size();
+                result["tables"][k]["schema"] =  db;               
             }
             print("</table>");
             print("-- " + CmonDateTime::currentDateTime().toString(MySqlLogFileFormat) + " --");
         } else {
             print ("Not connected to " + host);
         }
+        k++;
     }
     exit(result);
 }

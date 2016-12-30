@@ -17,7 +17,7 @@ var query2="SELECT count(table_name)"
            " WHERE table_schema "
            "NOT IN ('mysql', 'INFORMATION_SCHEMA','performance_schema', 'ndbinfo')";
 
-var MAX_TABLES=1024;
+var MAX_TABLES=4096;
 var ANALYZE_ALL_HOSTS=false;
 
 function main()
@@ -68,6 +68,9 @@ function main()
             advice.setJustification("No MYISAM table has been detected.");
             advisorMap[idx]= advice;
             print(advice.toString("%E"));
+            if(host.nodeType() == "galera")
+                host.clearAlarm(StorageMyIsam);
+
             if (ANALYZE_ALL_HOSTS)
                 continue;
             return advisorMap;
@@ -98,10 +101,14 @@ function main()
         advice.setJustification(justification);
         print(advice.toString("%E"));
         advisorMap[idx]= advice;
+        alarmMsg = justification + " You are recommended to change ENGINE to INNODB.";
+        if(host.nodeType() == "galera")
+           host.raiseAlarm(StorageMyIsam, Warning, alarmMsg);
         if (ANALYZE_ALL_HOSTS)
             continue;
         break;
     }
     return advisorMap;
 }
+
 

@@ -8,32 +8,32 @@
 * All args except xtraOpts are required.
 * xtraOpts: e.g WITH GRANT OPTION or REQUIRE SSL.. free text string.
 *          should be set to ''
-* hostAndPort : GRANT on particular host/port 
+* hostAndPort : GRANT on particular host/port
 */
 function main(user, hostname, privs, db, xtraOpts, hostAndPort)
 {
     var result = {};
 
     if (user.toString() == "" || user.toString() == "#N/A" || user.empty()) {
-        result["error_msg"] = "Argument 'user' not specified"; 
+        result["error_msg"] = "Argument 'user' not specified";
         print(result["error_msg"]);
         exit(result);
     }
 
     if (hostname.toString() == "" || hostname.toString() == "#N/A" || hostname.empty()) {
-        result["error_msg"] = "Argument 'hostname' not specified"; 
+        result["error_msg"] = "Argument 'hostname' not specified";
         print(result["error_msg"]);
         exit(result);
     }
 
     if (privs.toString() == "" || privs.toString() == "#N/A" || privs.empty()) {
-        result["error_msg"] = "Argument 'privs' not specified"; 
+        result["error_msg"] = "Argument 'privs' not specified";
         print(result["error_msg"]);
         exit(result);
     }
 
     if (db.toString() == "" || db.toString() == "#N/A" || db.empty()) {
-        result["error_msg"] = "Argument 'db' not specified"; 
+        result["error_msg"] = "Argument 'db' not specified";
         print(result["error_msg"]);
         exit(result);
     }
@@ -52,10 +52,9 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
     {
 
         host = hosts[idx];
-
-        if(!hostMatchesFilter(host,hostAndPort)){
-            continue;
-        }
+//        if(!hostMatchesFilter(host,hostAndPort)){
+//            continue;
+//        }
 
         map = host.toMap();
         connected = map["connected"];
@@ -66,7 +65,21 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
 
         isGalera  = map["isgalera"];
         if (isGalera) {
-            query = "SET WSREP_ON=ON;";
+            localState = map["galera"]["localstatusstr"];
+            if (localState != "Synced")
+                continue;
+            query = "SET WSREP_ON=ON;SET SQL_LOG_BIN=ON;";
+            retval2 = executeSqlCommand2(host, query);
+        }
+        else
+        {
+            isReadOnly = map["readonly"].toBoolean();
+            if (isReadOnly)
+            {
+           //     print(host, "is not a master");
+                continue;
+            }
+            query = "SET SQL_LOG_BIN=ON;";
             retval2 = executeSqlCommand2(host, query);
         }
         if (db == "*.*")
@@ -76,7 +89,7 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
            "EVENT,EXECUTE,FILE,INDEX,INSERT,LOCK TABLES,PROCESS,REFERENCES,"
            "RELOAD,REPLICATION CLIENT,REPLICATION SLAVE,SELECT,SHOW DATABASES,"
            "SHOW VIEW,SHUTDOWN,SUPER,TRIGGER,UPDATE";
-          
+
            var x = allGlobalPrivs.split(",");
            var revokeList = "";
            for (i=0; i<x.size() ; i++)
@@ -85,14 +98,14 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
                   revokeList += x[i] + ",";
            }
            query = "REVOKE " + revokeList + " GRANT OPTION"
-                  + " ON *.* FROM '" + user + "'@'" 
+                  + " ON *.* FROM '" + user + "'@'"
                   + hostname + "'";
 
         }
         else
             query = "REVOKE ALL PRIVILEGES, GRANT OPTION"
-                  + " ON " + db 
-                  + " FROM '" + user + "'@'" 
+                  + " ON " + db
+                  + " FROM '" + user + "'@'"
                   + hostname + "'";
         print (query);
         retval2 = executeSqlCommand2(host, query);
@@ -104,7 +117,7 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
             var doAlter = false;
 
             query = "GRANT " + privs + " ON " + db
-              + " TO '" + user + "'@'" 
+              + " TO '" + user + "'@'"
               + hostname + "'";
 
             if(xtraOpts.length() > 0) {
@@ -132,7 +145,7 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
         // For other MySQL versions
         else {
             query = "GRANT " + privs + " ON " + db
-              + " TO '" + user + "'@'" 
+              + " TO '" + user + "'@'"
               + hostname + "' "+ xtraOpts;
               print("query: ",query);
               retval2 = executeSqlCommand2(host, query);
@@ -142,17 +155,18 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
             result["error_msg"] = retval2["errorMessage"];
         } else {
            result["error_msg"] = "Successfully created: '" + user + "'@'" + hostname + "'";
-        }   
-
-        if (isGalera) {
-            executeSqlCommand2(host, "SET WSREP_ON=OFF;");
         }
+
+        if (isGalera)
+        {
+            query = "SET WSREP_ON=OFF;SET SQL_LOG_BIN=OFF;";
+        }
+        else
+        {
+            query = "SET SQL_LOG_BIN=OFF;";
+        }
+
+        break;
      }
      exit(result);
 }
-
-
-
-
-
-

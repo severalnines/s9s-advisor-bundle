@@ -32,8 +32,7 @@ function main(user, hostname, hostAndPort)
     for (idx = 0; idx < hosts.size(); ++idx)
     {
         host        = hosts[idx];
-        if(!hostMatchesFilter(host,hostAndPort))
-            continue;
+  
         map         = host.toMap();
         connected     = map["connected"];
         if (!connected)
@@ -41,10 +40,25 @@ function main(user, hostname, hostAndPort)
             
         isGalera  = map["isgalera"];
         
-        if (isGalera)
-            query = "SET WSREP_ON=ON;";
+        if (isGalera) {
+            localState = map["galera"]["localstatusstr"];
+            if (localState != "Synced")
+                continue;
+            query = "SET WSREP_ON=ON;SET SQL_LOG_BIN=ON;";
+            retval2 = executeSqlCommand2(host, query);
+        }
         else
-            query = "SET SQL_LOG_BIN=OFF;";
+        {
+            isReadOnly = map["readonly"].toBoolean();
+            if (isReadOnly)
+            {
+              //  print(host, ": is not a master");
+                continue;
+            }
+            query = "SET SQL_LOG_BIN=ON;";
+            retval2 = executeSqlCommand2(host, query);
+        }
+   
         executeSqlCommand2(host, query);
         if (user == "*")
               user = "";
@@ -58,9 +72,16 @@ function main(user, hostname, hostAndPort)
            result["error_msg"] = "Dropped user " + user + "'@'" + hostname + "'";
         print(host, ":");
         print(result["error_msg"]);
-        if (isGalera)
-            query = "SET WSREP_ON=OFF;";
+         if (isGalera)
+        {
+            query = "SET WSREP_ON=OFF;SET SQL_LOG_BIN=OFF;";
+        }
+        else
+        {
+            query = "SET SQL_LOG_BIN=OFF;";
+        }
         executeSqlCommand2(host, query);
+        break;
      }
      exit(result);
 }

@@ -9,8 +9,8 @@ function main(hostlist, section, key, newValue)
 {
     var hosts     = cluster::hosts();
     var result = {};
-    
-    if (hostlist == #N/A || 
+
+    if (hostlist == #N/A ||
         section == #N/A ||
         key == #N/A ||
         newValue == #N/A)
@@ -20,7 +20,7 @@ function main(hostlist, section, key, newValue)
         result["errorMessage"] = "Wrong arguments.";
         exit(result);
     }
-    
+
     var changeHostsArray = hostlist.split(",");
     var hostName = "";
     var msg = "";
@@ -45,16 +45,16 @@ function main(hostlist, section, key, newValue)
                 found  = true;
                 break;
             }
-        }    
+        }
         if (!found)
             continue;
-        
+
         result[i]={};
         result[i]["result"] = {};
         result[i]["result"]["hostname"] = hostName;
-        result[i]["result"]["restartNeeded"] = false; 
+        result[i]["result"]["restartNeeded"] = false;
         mysqldSection = false;
-        if (section.toUpperCase() == "MYSQLD" || 
+        if (section.toUpperCase() == "MYSQLD" ||
             section.toUpperCase() == "SERVER" ||
             section.toUpperCase() == "MARIADB")
         {
@@ -62,111 +62,108 @@ function main(hostlist, section, key, newValue)
         }
         // a better test is needed here, since what we really want to check
         // is if the host is reachable from ssh.
-        if (!connected)
+/*        if (!connected)
         {
             result[i]["result"]["success"] = false ;
-            result[i]["result"]["errorMessage"] = host.hostName() + ":" + 
-                                                          host.port() + 
+            result[i]["result"]["errorMessage"] = host.hostName() + ":" +
+                                                          host.port() +
                                                           " is not reachable." +
                                                           " Skipping this server";
             continue;
         }
-
-        if (connected)
+*/
+        var oldValue = "";
+        if (mysqldSection && connected)
         {
-            var oldValue = "";
-            if (mysqldSection)
+            oldValue = readVariable(host, key);
+            if (oldValue  == false)
             {
-                oldValue = readVariable(host, key);
-                if (oldValue  == false)
+                result[i]["result"]["success"] = false ;
+                result[i]["result"]["errorMessage"] = host.hostName() + ":" +
+                    host.port() +
+                    ": Variable " +
+                    key.toString() +
+                    " not found.";
+                continue;
+            }
+            if (oldValue.toString() == newValue.toString())
+            {
+                result[i]["result"]["success"] = true;
+                result[i]["result"]["errorMessage"] = host.hostName() + ":" +
+                    host.port() +
+                    ": Ignoring change of " +
+                    key + ", since " +
+                    newValue  +
+                    " = (current " +
+                    oldValue + ").";
+                continue;
+            }
+        }
+        var setglobal = false;
+        if (mysqldSection && connected)
+        {
+            retval = setGlobalVariable(host,key, newValue);
+            if (!retval["success"])
+            {
+                errorMsg = retval["errorMessage"].toString();
+                if (errorMsg.contains("read only variable"))
                 {
-                    result[i]["result"]["success"] = false ; 
-                    result[i]["result"]["errorMessage"] = host.hostName() + ":" + 
-                                                          host.port() + 
-                                                          ": Variable " + 
-                                                          key.toString() + 
-                                                          " not found.";
-                    continue;   
+                    result[i]["result"]["success"] = true;
+                    result[i]["result"]["restartNeeded"] = true;
                 }
-                if (oldValue.toString() == newValue.toString())
+                else
                 {
-                    result[i]["result"]["success"] = true; 
-                    result[i]["result"]["errorMessage"] = host.hostName() + ":" + 
-                                                          host.port() + 
-                                                        ": Ignoring change of " + 
-                                                        key + ", since " + 
-                                                        newValue  + 
-                                                        " = (current " + 
-                                                        oldValue + ").";
+                    result[i]["result"]["success"] = retval["success"];
+                    result[i]["result"]["errorMessage"] = retval["errorMessage"];
+                    print(retval["errorMessage"]);
                     continue;
                 }
             }
-            var setglobal = false;
-            if (mysqldSection)
-            {
-                retval = setGlobalVariable(host,key, newValue);
-                if (!retval["success"])
-                {
-                    errorMsg = retval["errorMessage"].toString();
-                    if (errorMsg.contains("read only variable"))
-                    {
-                        result[i]["result"]["success"] = true; 
-                        result[i]["result"]["restartNeeded"] = true; 
-                    }
-                    else
-                    {
-                       result[i]["result"]["success"] = retval["success"];
-                       result[i]["result"]["errorMessage"] = retval["errorMessage"];
-                       print(retval["errorMessage"]);
-                       continue;
-                    }
-                } 
                 else
-                {
-                    setglobal = true;
-                }
+            {
+                setglobal = true;
             }
-            msg = host.hostName() 
-                       + ":" + host.port() + ": Successfully changed" 
-                       + " and set " 
-                       + key + "=" + newValue  + " in section [" + section  + "].<br/>"; 
-            if (mysqldSection)
-                msg = msg + " Previous value was " + oldValue + ".<br/>";
-         
         }
+        msg = host.hostName()
+            + ":" + host.port() + ": Successfully changed"
+            + " and set "
+            + key + "=" + newValue  + " in section [" + section  + "].<br/>";
+        if (mysqldSection)
+                msg = msg + " Previous value was " + oldValue + ".<br/>";
+
         var config      = host.config();
         error  = config.errorMessage();
-        
+
         value = config.setVariable(section, key, newValue);
         config.save();
-        
+
         if (result[i]["result"]["restartNeeded"]  || !connected)
         {
             msg = msg + " The change has been persisted in the config file.<br/>";
             msg = msg + " <b>A restart of the DB node is required for the"
                 + " change to take effect</b>.";
             if (!connected)
-               result[i]["result"]["restartNeeded"] = true;
+                result[i]["result"]["restartNeeded"] = true;
         }
         else
         {
             if (setglobal)
                 msg = msg + " The change has been persisted in the config file"
-                + " and successfully set with SET GLOBAL.<br/>"  
+                + " and successfully set with SET GLOBAL.<br/>"
                 + "<b>No DB node restart is required</b>.";
             else
                 msg = msg + " The change has been persisted in the config file.<br/>"
                 + "<b>No DB node restart is required</b>.";
         }
-        result[i]["result"]["errorMessage"] = msg; 
+        result[i]["result"]["errorMessage"] = msg;
         if(error != "Success.")
         {
             result[i]["result"]["success"] = false;
-            result[i]["result"]["errorMessage"] = error; 
+            result[i]["result"]["errorMessage"] = error;
         }
         else
-            result[i]["result"]["success"] = true;         
-    }   
+            result[i]["result"]["success"] = true;
+    }
     return result;
 }
 
