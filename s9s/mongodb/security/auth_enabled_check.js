@@ -2,7 +2,7 @@
 #include "cmon/io.h"
 #include "cmon/alarms.h"
 
-var TITLE="Authentication check";
+var TITLE="MongoDB authentication enabled";
 
 
 function main(hostAndPort) {
