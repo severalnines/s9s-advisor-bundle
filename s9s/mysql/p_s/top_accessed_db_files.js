@@ -1,7 +1,8 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
 
- 
+var DESCRIPTION="This advisor selects the top 10 most frequently accessed files by MySQL and"
+                " shows you the number of times accessed and total time from performance_schema.";
 query="SELECT file_name, count_star,"
       " sum_timer_wait/1000000000 wait_s"
       " FROM performance_schema.file_summary_by_instance"  

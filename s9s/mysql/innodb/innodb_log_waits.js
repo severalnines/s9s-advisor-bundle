@@ -1,9 +1,7 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks if innodb has had to wait for redo log flushing.
- */
- 
+var DESCRIPTION="This advisor reads the innodb_log_waits value from the runtime status and notifies if the value is more than 0,"
+                " which indicates a peak write load and possibility of disks are too slow to sustain the IO.";
 var WARNING_THRESHOLD=0;
 var TITLE="InnoDb wait for redolog";
 var ADVICE_WARNING="Redo log was full, perhaps due to peak write load."

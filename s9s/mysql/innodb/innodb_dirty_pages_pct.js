@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks the percentage of dirty innodb pages
- */
- 
+var DESCRIPTION="This advisor calculates the ratio of innodb_buffer_pool_pages_dirty over innodb_buffer_pool_pages_total and"
+                " notifies you if the ratio is higher. This informs you when to increase the innodb_buffer_pool_size,"
+                " if the ratio stays high for a long time.";
 var WARNING_THRESHOLD=0;
 var TITLE="InnoDb percent dirty pages";
 var ADVICE_WARNING= "During write heavy load it is normal"

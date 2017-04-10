@@ -3,7 +3,7 @@
  * a JS implementation of mysql_secure_installation
  */
  
-
+var DESCRIPTION="This advisor runs multiple checks and provides security recommendations based on mysql_secure_installation script.";
 function remove_anonymous_users(host)
 {
     print(host , ": Delete anonymous users.");

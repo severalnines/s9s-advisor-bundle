@@ -1,12 +1,8 @@
 #include "common/mysql_helper.js"
 
 
-/**
- * Check if there are tables without Primary Keys
- * This should be executed as an Advisor once per day, or run manually
- * when a schema change has been made.
- */
-
+var DESCRIPTION="This advisor identifies tables that have no explicit primary keys from the information_schema,"
+                " which is important to have as a unique identifier for each row in a dataset.";
 var query1= "SELECT DISTINCT t.table_schema, t.table_name, t.engine"
        " FROM information_schema.tables AS t"
        " LEFT JOIN information_schema.columns AS c ON "

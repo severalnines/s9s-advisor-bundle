@@ -1,10 +1,9 @@
 #include "common/mysql_helper.js"
 
 
-/**
- * Checks the setting of wsrep_slave_threads
- */
- 
+var DESCRIPTION="This advisor reads the value of wsrep_slave_threads in runtime and"
+                " compares the value with the warning threshold and notifies you"
+                " if the slave thread is lower than 4 (a value that can be increased later depending on the workload).";
 var WARNING_THRESHOLD=4;
 
 

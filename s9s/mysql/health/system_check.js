@@ -11,6 +11,8 @@
  * DROP TABLE IF NOT EXITS s9s_cmon.s9s_dummy;
  */
 
+var DESCRIPTION="This advisor is a Health Check which executes a series of queries to test DDL (metadata locks) and"
+                " DML and notifies you if the check fails, which could indicate that although the server may be up the database may not be responding correctly.";
 var TITLE = "System Health Check - v0.1";
 
 /* This script takes an argument

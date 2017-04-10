@@ -2,10 +2,8 @@
 #include "common/mysql_helper.js"
 
 
-/**
- * Checks the setting of wsrep_node_name
- */
- 
+var DESCRIPTION="This advisor reads the value of wsrep_node_name inside each database node's configuration file and"
+                " notifies you if the node does not contain the parameter, which is a recommended way to simplify recovery in especially in WAN setup.";
 var WARNING_THRESHOLD=4;
 
 

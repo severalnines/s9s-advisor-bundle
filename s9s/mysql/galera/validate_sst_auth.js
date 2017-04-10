@@ -2,10 +2,9 @@
 //#include "common/helpers.js"
 
 
-/**
- * Compares [xtrabackup] password with wsrep_sst_auth
- */
- 
+var DESCRIPTION="This advisor checks the users and passwords from wsrep_sst_auth and"
+                " compares it with the xtrabackup directive inside configuration file."
+                " This ensures they are the same and minimized the risk of failure during state transfer and syncs.";
 function readRemoteConfigValue(config, section, variableName)
 {
     var variables    = config.variable(variableName.toString());

@@ -3,6 +3,9 @@
 #include "cmon/io.h"
 #include "cmon/alarms.h"
 
+var DESCRIPTION="This advisor checks all collections daily on the mongo router and"
+                " verifies that they are enabled for sharding, which prevents you"
+                " from have an unsharded collection that may fill up to capacity.";
 var TITLE="Collection sharding check";
 var ADVICE_WARNING="Non-sharded collections found. ";
 var ADVICE_OK="All collections have been sharded." ;

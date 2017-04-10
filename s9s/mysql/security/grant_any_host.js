@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
-/**
- * Checks if a user is allowed to access from any host.
- */
 
+var DESCRIPTION="This advisor identifies all users that use a wildcard host from the mysql system table,"
+                " and let you have more control over which hosts are able to connect to the servers.";
 var TITLE="Access from any host ('%')";
 
 function main()

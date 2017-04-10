@@ -1,7 +1,7 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
 
- 
+var DESCRIPTION="This advisor selects the top 5 queries, sorted by execution count, from performance_schema." ;
 query="select (count_star/(select sum(count_star) FROM"
       " performance_schema.events_statements_summary_by_digest) * 100) as pct,"
         " count_star,left(digest_text,150) as stmt "

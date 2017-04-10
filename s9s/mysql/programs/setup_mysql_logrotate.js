@@ -1,6 +1,7 @@
 #include "common/mysql_helper.js"
 
-
+var DESCRIPTION="This advisor creates a MySQL logrotate configuration file under"
+                " /etc/logrotate.d/mysql on every MySQL server which prevents your MySQL error log from growing out of hand.";
 ROOT_PASSWORD='password';
 ROOT_USER='root';
 

@@ -1,9 +1,7 @@
 #include "common/mysql_helper.js"
 
-/**
- * auto tune table_cache_size
- */
-
+var DESCRIPTION="This advisor calculates the percentage of open_tables over tables_open_cache and"
+                " adjusts table_open_cache automatically based on the running workload.";
 var UPPER_LIMIT=16384;
 var INCREMENT = 256;
 var DECREMENT =256;

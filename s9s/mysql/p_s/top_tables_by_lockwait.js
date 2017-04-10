@@ -1,7 +1,7 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
 
- 
+var DESCRIPTION="This advisor selects the top 10 tables, sorted by the sum of lock wait, from performance_schame";
 query="SELECT object_schema, object_name, count_star, sum_timer_wait"
        " FROM performance_schema.table_lock_waits_summary_by_table"
     " ORDER BY 4 DESC LIMIT 10";

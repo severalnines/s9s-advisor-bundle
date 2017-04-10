@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks the percentage of max ever used connections 
- * 
- */ 
+var DESCRIPTION="This advisor calculates the percentage of max_used_connections over max_connections"
+                " to determine the maximum ever used connections, if the percentage is higher than 90%"
+                " you will be notified, preventing your database server from becoming unstable.";
 var WARNING_THRESHOLD=0;
 var TITLE="Connections ever used";
 var ADVICE_WARNING="In the lifetime of the server more than"

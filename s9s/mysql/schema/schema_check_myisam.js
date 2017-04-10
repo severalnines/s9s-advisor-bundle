@@ -1,12 +1,8 @@
 #include "common/mysql_helper.js"
 
 
-/**
- * Check if there are any MYISAM tables
- * This should be executed as an Advisor every day, or run manually
- * when a schema change has been made.
- */
- 
+var DESCRIPTION="This advisor identifies all tables with MyISAM storage engine from the information_schema,"
+                " which is not a recommended 'crash-safe' type of storage engine.";
 var query1= "SELECT table_schema, table_name, engine"
        " FROM information_schema.tables"
        " WHERE table_schema NOT IN ('mysql', 'INFORMATION_SCHEMA',"

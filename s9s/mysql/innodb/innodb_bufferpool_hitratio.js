@@ -1,8 +1,8 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks the buffer pool hit ratio
- */
+var DESCRIPTION="This advisor calculates the ratio of innodb_buffer_pool_reads over innodb_buffer_pool_read_requests and"
+                " notifies you if the ratio is lower than 999."
+                " Hit ratio provides insight on how often MySQL pages are retrieved from memory instead of disk.";
 var OK_THRESHOLD=999;
 var WARNING_THRESHOLD=990;
 

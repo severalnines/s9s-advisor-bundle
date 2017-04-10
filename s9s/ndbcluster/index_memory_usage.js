@@ -1,10 +1,8 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
 
-/**
- * Checks index memory usage
- */
- 
+var DESCRIPTION="This advisor calculates the ratio of IndexMemory usage over IndexMemory total"
+                " so you can increase or clear the history tables as needed.";
 var TITLE = "IndexMemory Usage";
 
 var INDEXMEMORY_WARNING = 80;

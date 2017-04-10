@@ -3,6 +3,10 @@
 #include "cmon/io.h"
 #include "cmon/alarms.h"
 
+var DESCRIPTION="This advisor collects the number of tickets every minute and"
+                " notifies you if the number of tickets exceeds 90%."
+                " Tickets are used in the WiredTiger storage engine to control read/write operations (like semaphores),"
+                " if you run out of tickets it will prevent your ability to read/write to the database.";
 var WARNING_THRESHOLD=10;
 var TITLE="Connections used";
 var ADVICE_WARNING_READS="In the past 5 minutes more than 90% of "

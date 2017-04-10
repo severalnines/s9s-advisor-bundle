@@ -1,10 +1,9 @@
 #include "common/mysql_helper.js"
 #include "common/helpers.js"
 #include "cmon/alarms.h"
-/**
- * Checks if a user does not have a password.
- */
 
+var DESCRIPTION="This advisor identifies all users who do not have a password in the mysql system table,"
+                " which helps to increase data security.";
 var TITLE="Check number of accounts without a password";
 
 function main()

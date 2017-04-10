@@ -8,7 +8,8 @@
  * http://www.markleith.co.uk/2012/07/13/monitoring-processes-with-performance-schema-in-mysql-5-6/
  * Prints a detailed processlist
  */
- 
+var DESCRIPTION="This advisor selects the MySQL process list on all database servers from the performance_schema and"
+                " provides a summary of all running processes across the MySQL server.";
 query="SELECT pps.thread_id AS thd_id,"
 "       pps.processlist_id AS conn_id,"
 "       IF (pps.name = 'thread/sql/one_connection', "

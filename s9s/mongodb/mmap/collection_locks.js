@@ -3,6 +3,8 @@
 #include "cmon/alarms.h"
 
 // It is advised to have a replication window of at least 24 hours, critical is 1 hour
+var DESCRIPTION="This advisor collects lock information from MongoDB every 20 minutes"
+                " and notifies you if the percentage of locking exceeds the threshold you have established.";
 var WARNING_COLL_LOCK_PERC = 1;
 var CRITICAL_COLL_LOCK_PERC = 5;
 var TITLE="Collection lock percentage";

@@ -1,9 +1,7 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks the index usage and warns if there are unused indexes present
- * 
- */ 
+var DESCRIPTION="This advisor selects the unused existing indexes from performance_schema"
+                " to allow you to remove the unused indexes which improves the schema and overall performance.";
 var TITLE="Unused indexes";
 var ADVICE_WARNING="Unused indexes have been found in your cluster. It is advised to drop them.";
 var ADVICE_OK="No unused indexes found.";

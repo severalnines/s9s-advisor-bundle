@@ -1,9 +1,7 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks the index usage and warns if there are unused indexes present
- * 
- */ 
+var DESCRIPTION="This advisor selects all tables being accessed without using an index from performance_schema"
+                " to show you where to improve the queries running against these tables.";
 var TITLE="Table access without using index";
 var ADVICE_WARNING="There has been access to tables without using an index. Please investigate queries using these tables using a query profiler.";
 var ADVICE_OK="All tables have been accessed using indexes.";

@@ -1,12 +1,8 @@
 #include "common/mysql_helper.js"
 
 
-/**
- * Sets the wsrep_cluster_address if not set properly
- * to include all nodes
- */
- 
-
+var DESCRIPTION="This advisor reads wsrep_cluster_address in runtime and adjusts the value of wsrep_cluster_address"
+                " inside configuration file automatically to ensure the MySQL service will be started correctly.";
 function main()
 {
     var hosts     = cluster::galeraNodes();

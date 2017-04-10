@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks the percentage of currently used connections 
- */
-
+var DESCRIPTION="This advisor calculates the percentage of threads_connected over max_connections,"
+                " if the percentage is higher than 90% you will be notified,"
+                " preventing your database server from becoming unstable.";
 var WARNING_THRESHOLD=90;
 var TITLE="Connections currently used";
 var ADVICE_WARNING="You are using more than " + WARNING_THRESHOLD +

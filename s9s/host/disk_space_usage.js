@@ -1,9 +1,9 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
-/**
- * Checks if the disk space used (current and predicted) > 95%
- */
 
+var DESCRIPTION="This advisor performs a disk check every 30 minutes and"
+                " notifies you if the disk space usage is greater than 95%."
+                " It also predicts the storage usage in "X" days based on linear estimation.";
 var TITLE="Checking Disk Space Used and Predicted Usage";
 var THRESHOLD_WARNING = 95;
 var LOOKBACK_DAYS = 5;
@@ -33,10 +33,10 @@ function main()
         print(host.hostName());
         var advice = new CmonAdvice();
 
-        
+
         print("==========================");
-        
-        
+
+
         var diskInfoList     = host.diskInfo();
         justification = "";
         msg = "";
@@ -48,30 +48,30 @@ function main()
             var array3   = list.toArray("total");
             var array1   = list.toArray("free");
             var array2   = list.toArray("created");
-    
+
             var expected = forecast(futureTime.toInt(), array1, array2);
-            
+
                 // Linear regression might say we are going to have less than zero
             // bytes of free space, and we say zero then.
             expected = expected < 0 ? 0 : expected;
-        
+
             expectedUsed = array3[array3.size()-1] - expected;
             currentUsed = array3[array3.size()-1] - array1[array1.size()-1];
             expectedUsedPct = round(100 * expectedUsed / array3[array3.size()-1], 1);
             currentUsedPct =round(100 * currentUsed / array3[array3.size()-1], 1);
-            
+
             justification += "Mountpoint '" + mountpoint + "' (" + device + ") : Current: " + currentUsedPct.toInt() + "% disk space is used. "
-                "Prediction in " + LOOKAHEAD_DAYS + " days: " + expectedUsedPct.toInt() + 
+                "Prediction in " + LOOKAHEAD_DAYS + " days: " + expectedUsedPct.toInt() +
                 "% of disk space will be used.<br/>";
-                       
+
             //print(justification);
-        
+
             if (expectedUsedPct > THRESHOLD_WARNING || currentUsedPct > THRESHOLD_WARNING)
             {
                 advice.setSeverity(Warning);
                 if (expectedUsedPct > THRESHOLD_WARNING)
                     msg += "Mountpoint '" + mountpoint + "' (" + device + ") : is expected to run short on disk space."
-                          " If you have recently removed or created large" 
+                          " If you have recently removed or created large"
                           " files on the hosts then the prediction"
                           " (using linear estimation) can be inaccurate."
                           " You are recommended to either increase the partition size or"
@@ -80,7 +80,7 @@ function main()
                     msg += "Mountpoint '" + mountpoint + "' (" + device + ") is running low on disk space. Currently " + currentUsedPct +
                           " % is used."
                           " Correct as soon as possible.<br/>";
-                          
+
                 host.raiseAlarm(HostDiskUsage, Warning, msg);
             }
             else

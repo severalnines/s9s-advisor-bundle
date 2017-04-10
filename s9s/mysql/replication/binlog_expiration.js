@@ -1,9 +1,7 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks if binlog expire_logs_days is set if log_bin enabled.
- */
-
+var DESCRIPTION="This advisor reads the value of expire_log_days to see if it exists and"
+                " provides a recommendation to the user to set one, preventing indefinite binary logs growth.";
 var WARNING_THRESHOLD=0;
 var TITLE="Expire binlogs";
 var ADVICE_WARNING="You are using more than 80% of the max_connections."

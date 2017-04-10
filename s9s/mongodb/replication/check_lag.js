@@ -3,6 +3,10 @@
 #include "cmon/io.h"
 #include "cmon/alarms.h"
 
+var DESCRIPTION="This advisor collects the replication information of the primary every minute,"
+                " then calculates the lag between the primary and secondaries in seconds and"
+                " notifies you if the lag exceeds 60 seconds. This is important as Mongo client drivers"
+                " tend to pick the least lagging secondaries and bringing more stress on these less laggy nodes.";
 var WARNING_THRESHOLD=90;
 var WARNING_LAG_SECONDS = 60;
 var TITLE="Replication check";

@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
-/**
- * Checks the query cache.
- */
 
+var DESCRIPTION="This advisor calculates the ratio of Qcache_hits over the sum of Qcache_hits and Qcache_inserts and"
+                " provides recommendations for you to configure query_cache_size correctly, a benefit for users with read-intensive workloads.";
 var TITLE="Query cache hitratio";
 var ADVICE_WARNING= "Tuning the query_cache is hard."
     " Try and increase the query_cache_size to be between 64M and 256M."

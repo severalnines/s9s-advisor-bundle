@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 
-/**
- * Suggests to enable Performance Schema if it is not enabled.
- */ 
-
+var DESCRIPTION="This advisor reads the performance_schema value in runtime and"
+                " suggests that you to enable performance_schema in the configuration file is disabled,"
+                " allowing you to inspect internal execution of the server at runtime.";
 var WARNING_THRESHOLD=4;
 
 function main()

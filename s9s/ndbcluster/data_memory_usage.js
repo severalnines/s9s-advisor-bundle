@@ -1,10 +1,8 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
 
-/**
- * Checks data memory usage
- */
- 
+var DESCRIPTION="This advisor calculates the ratio of DataMemory usage over DataMemory total"
+                " so you can increase or clear the history tables as needed.";
 var TITLE = "DataMemory Usage";
 
 var DATAMEMORY_WARNING = 80;

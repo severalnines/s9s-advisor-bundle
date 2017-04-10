@@ -1,12 +1,8 @@
 #include "common/mysql_helper.js"
 
 
-/**
- * Checks the setting of wsrep_cluster_address that all nodes
- * are present there.
- */
- 
-
+var DESCRIPTION="This advisor reads the value of wsrep_cluster_address inside each database node's configuration file and"
+                " notifies you if the parameter does not exist, preventing potential catastrophic failure and data loss during service startup.";
 function main()
 {
     var hosts     = cluster::galeraNodes();

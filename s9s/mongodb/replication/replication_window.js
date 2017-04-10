@@ -3,6 +3,9 @@
 #include "cmon/alarms.h"
 
 // It is advised to have a replication window of at least 24 hours, critical is 1 hour
+var DESCRIPTION="This advisor collects the first and the last oplog entry every minute from every host,"
+                " calculates the time difference between the two and notifies you if the window"
+                " is within the set threshold (less than 24 hours for warning, less than 1 hour for critical).";
 var WARNING_REPL_WINDOW = 24*60*60;
 var CRITICAL_REPL_WINDOW = 60*60;
 var TITLE="Replication window";

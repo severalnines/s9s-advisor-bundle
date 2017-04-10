@@ -1,6 +1,8 @@
 #include "common/mysql_helper.js"
 
-
+var DESCRIPTION="This advisor scans the MySQL data directory and notifies you"
+                " if the GRA_*.log file exists. This file only appears if there"
+                " is a failure or warning in your Galera replication.";
 function main()
 {
     var hosts     = cluster::mySqlNodes();

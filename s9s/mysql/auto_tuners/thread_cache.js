@@ -1,9 +1,7 @@
 #include "common/mysql_helper.js"
 
-/**
- * auto tune table_cache_size
- */
-
+var DESCRIPTION="This advisor calculates the percentage of threads_created over threads_cached and"
+                " adjust the thread_cache_size automatically based on the running workload.";
 var UPPER_LIMIT=16384;
 var INCREMENT = 256;
 var DECREMENT =256;

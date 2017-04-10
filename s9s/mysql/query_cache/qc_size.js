@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
-/**
- * Checks the table cache usage
- */
 
+var DESCRIPTION="This advisor calculates the query_cache_size whether it's between 64M and 256M and"
+                " provides you with recommendations to configure the correct query_cache_size.";
 var TITLE="Query Cache Size";
 var ADVICE_WARNING= "query_cache_size is recommended to"
                     " be in the range of 64M to 256M.";

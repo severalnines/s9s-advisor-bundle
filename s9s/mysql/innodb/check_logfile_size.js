@@ -1,10 +1,9 @@
 #include "common/mysql_helper.js"
 #include "cmon/graph.h"
 
-/**
- * Check size of the innodb_log_file_size and it is sized correctly.
- */
-
+var DESCRIPTION="This advisor calculates the InnoDB log growth per hour and"
+                " compares it with the innodb_log_file_size configured on the host and"
+                " notifies you if the InnoDB log growth is higher than what is configured, which is important to avoid IO spikes during flushing.";
 var TITLE="Innodb_log_file_size check";
 
 

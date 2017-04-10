@@ -1,10 +1,8 @@
 #include "common/mysql_helper.js"
 
 
-/**
- * Checks the setting of wsrep_slave_threads
- */
- 
+var DESCRIPTION="This advisor reads the value of wsrep_sst_method and and notifies you"
+                " if wsrep_sst_xtrabackup-v2 is not installed, which is a recommended SST method for all Galera variants.";
 var WARNING_THRESHOLD=4;
 
 

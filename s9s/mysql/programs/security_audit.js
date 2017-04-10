@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
-/**
- * shows what accounts are allowed to access from any host.
- */
 
+var DESCRIPTION="This advisor highlights any account that has been allowed to access the database with global host access and"
+                " without password, allowing you to remove or patch the unsafe accounts and increase security.";
 var TITLE="Security Audit - v0.2";
 
 function main()

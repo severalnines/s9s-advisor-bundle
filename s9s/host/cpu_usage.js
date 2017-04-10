@@ -1,9 +1,9 @@
 #include "common/mysql_helper.js"
 #include "cmon/alarms.h"
-/**
- * Checks if the CPU Usage for the last hour is > 90%
- */
 
+var DESCRIPTION="This advisor performs a CPU check every 5 minutes and notifies you"
+                " if the average CPU usage for the last hour exceeds 90%, which"
+                " enables you to prevent database performance issues caused by high CPU usage.";
 var TITLE="Excessive CPU Usage";
 var ADVICE_WARNING= "CPU usage has been high.";
 var ADVICE_OK="CPU Usage is ok." ;
@@ -35,15 +35,15 @@ function main()
         var array1   = list.toArray("sys");
         var array2   = list.toArray("iowait");
         var array4   = list.toArray("steal");
-        
+
         var usr = average(array3);
         var sys = average(array1);
         var iowait = average(array2);
         var steal = average(array4);
-        
+
         var total = 100*(usr + sys + iowait + steal);
         total = total.toInt();
-        
+
         var advice = new CmonAdvice();
         justification = "CPU Usage has averaged at " + total + "% for the last " + MINUTES +" minutes." ;
         if (total > THRESHOLD_WARNING)
@@ -61,7 +61,7 @@ function main()
         advice.setTitle(TITLE);
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
-        
+
         print(advice.toString("%E"));
     }
     return advisorMap;

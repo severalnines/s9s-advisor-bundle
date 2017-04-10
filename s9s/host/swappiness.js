@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks if /proc/sys/vm/swappiness is set to 1.
- */
-
+var DESCRIPTION="This advisor checks if swappiness is disallowed (set to 1)"
+            " on the host to ensure that the host does not swap"
+            " which is not optimal for database workload performance.";
 var TITLE="Swappiness check";
 var ADVICE_WARNING="/proc/sys/vm/swappiness is not set to 1. Set it to 1 to avoid"
     " unnecessary swapping." ;
@@ -20,7 +19,7 @@ function main()
         host        = hosts[idx];
         if (!host.connected())
             continue;
-        
+
         if (examinedHostnames.contains(host.hostName()))
             continue;
         examinedHostnames += host.hostName();
@@ -30,8 +29,8 @@ function main()
         map         = host.toMap();
         var advice = new CmonAdvice();
 
-    
-            
+
+
         retval = host.system("cat /proc/sys/vm/swappiness");
         reply = retval["result"];
         if (!retval["success"])
@@ -50,7 +49,7 @@ function main()
                 msg = "Check why the command failed: " + retval["errorMessage"];
                 advice.setSeverity(Warning);
                 advice.setJustification("Command failed.");
-                advice.setAdvice("Check why the command failed: " + 
+                advice.setAdvice("Check why the command failed: " +
                                   retval["errorMessage"]);
             }
             print(host.hostName() + ": " + msg);
@@ -67,7 +66,7 @@ function main()
             else
             {
                 advice.setSeverity(Warning);
-                advice.setJustification("/proc/sys/vm/swappiness is set to " + 
+                advice.setJustification("/proc/sys/vm/swappiness is set to " +
                                           swappiness);
                 advice.setAdvice(ADVICE_WARNING);
             }

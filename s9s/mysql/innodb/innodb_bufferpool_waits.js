@@ -1,9 +1,8 @@
 #include "common/mysql_helper.js"
 
-/**
- * Checks if innodb has had to wait for checkpoints to complete.
- */
- 
+var DESCRIPTION="This advisor reads the innodb_buffer_pool_wait_free value from the runtime status and"
+                " notifies you if the value is more than 0, which indicates the innodb_buffer_pool_size is too small,"
+                " and that it had to wait for checkpointing.";
 var WARNING_THRESHOLD=0;
 var TITLE="Innodb_buffer_pool";
 

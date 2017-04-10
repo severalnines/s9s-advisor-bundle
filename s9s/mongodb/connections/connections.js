@@ -3,6 +3,8 @@
 #include "cmon/io.h"
 #include "cmon/alarms.h"
 
+var DESCRIPTION="This advisor collects the number of connections every minute and"
+                " notifies you if the connections aren't exceeding the threshold in percentage.";
 var WARNING_THRESHOLD=90;
 var TITLE="Connections used";
 var ADVICE_WARNING="In the past 5 minutes more than 90% of "
@@ -43,7 +45,7 @@ function main(hostAndPort) {
         arr_connections_available = stats.toArray("connections.available");
 
         total_connections = average(arr_connections_current) + average(arr_connections_available);
-        
+
         if ((average(arr_connections_current) / total_connections) * 100 > WARNING_THRESHOLD)
         {
             advice.setSeverity(Warning);
@@ -64,6 +66,6 @@ function main(hostAndPort) {
     }
     return advisorMap;
 }
- 
+
 
 
