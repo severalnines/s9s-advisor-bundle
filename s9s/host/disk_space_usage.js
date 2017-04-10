@@ -3,7 +3,7 @@
 
 var DESCRIPTION="This advisor performs a disk check every 30 minutes and"
                 " notifies you if the disk space usage is greater than 95%."
-                " It also predicts the storage usage in "X" days based on linear estimation.";
+                " It also predicts the storage usage in 'X' days based on linear estimation.";
 var TITLE="Checking Disk Space Used and Predicted Usage";
 var THRESHOLD_WARNING = 95;
 var LOOKBACK_DAYS = 5;
