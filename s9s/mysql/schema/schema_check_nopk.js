@@ -24,13 +24,28 @@ function main()
 {
     var hosts     = cluster::mySqlNodes();
     var advisorMap = {};
-    /* We will only run the query on one galera node
+        /* We will only run the query on one galera node
      * so we will create only one advice.
      */
 
     var advice = new CmonAdvice();
     advice.setTitle("Tables without PRIMARY KEY");
 
+    cmonConfig       = conf::values();
+    var exists = cmonConfig.keys().contains("enable_is_queries");
+    
+    if (exists) 
+        if (!cmonConfig["enable_is_queries"].toBoolean())
+        {
+            advice.setHost(hosts[0]);
+            advice.setAdvice("Nothing to do.");
+            advice.setSeverity(Ok);
+            advice.setJustification("Information_schema queries are not enabled.");
+            advisorMap[0]= advice;
+            return advisorMap;
+        }
+    
+    
     var foundNoPK = false;
     for (idx = 0; idx < hosts.size(); idx++)
     {

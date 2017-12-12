@@ -23,6 +23,7 @@ function main()
         {
             continue;
         }
+        advice.setHost(host);        
         var result = getValueMap(host, 
                                  "select node_id, used, total from"
                                  " ndbinfo.memoryusage where"
@@ -32,7 +33,6 @@ function main()
             advice.setJustification("Failed to read IndexMemory from ndbconfig.");
             advice.setSeverity(Warning);
             advice.setAdvice("Unknown Error.");
-            advice.setHost(host);
             advisorMap[idx]= advice;
             return advisorMap;
         }

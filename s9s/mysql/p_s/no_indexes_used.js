@@ -17,23 +17,23 @@ function main()
 {
     var hosts     = cluster::mySqlNodes();
     var advisorMap = {};
-
+    k=0;
     for (idx = 0; idx < hosts.size(); ++idx)
     {
         host        = hosts[idx];
         map         = host.toMap();
         connected     = map["connected"];
         var advice = new CmonAdvice();
-
+        advice.setHost(host);
+        advice.setTitle(TITLE);
         if(!connected)
             continue;
         if (!readVariable(host, "performance_schema").toBoolean())
         {
-            advice.setHost(host);
-            advice.setTitle(TITLE);
-            advice.setAdvice("Nothing to check.");
-            advice.setJustification("performance_schema is not enabled");
-            advisorMap[idx]= advice;
+            advice.setJustification("performance_schema is not enabled.");
+            advice.setSeverity(Ok);
+            advice.setAdvice("No advice.");
+            advisorMap[k++]= advice;
             print(host, ": performance_schema is not enabled.");
             continue;
         }
@@ -43,24 +43,31 @@ function main()
         if (result == false)
         {
             msg = concatenate(msg, "No tables have been queried without indexes.");
-            advice.setJustification(ADVICE_OK);
+            advice.setAdvice(ADVICE_OK);
             advice.setSeverity(Ok);
         }
         else
         {
             for (i=0; i<result.size(); ++i)
             {
-                msg = concatenate(msg, "Table has been queried without using indexes: ", result[i][0], ".", result[i][1], " with a total of ", result[i][2], " IO operations (", result[i][3], " Read / ", result[i][4]," Write / ", result[i][5], " Delete)<br/><br/>");
+                msg = concatenate(msg, "Table has been queried without using indexes: ", 
+                                          result[i][0], ".", 
+                                          result[i][1], " with a total of ", 
+                                          result[i][2], " IO operations (", 
+                                          result[i][3], " Read / ", 
+                                          result[i][4]," Write / ", 
+                                          result[i][5], " Delete)<br/><br/>");
             }
-            advice.setJustification(ADVICE_WARNING);
+            advice.setAdvice(ADVICE_WARNING);
             advice.setSeverity(Warning);
         }
         
         print(msg);
         advice.setHost(host);
         advice.setTitle(TITLE);
-        advice.setAdvice(msg);
-        advisorMap[idx]= advice;
+        advice.setJustification(msg);
+        advisorMap[k++]= advice;
     }
     return advisorMap;
 }
+

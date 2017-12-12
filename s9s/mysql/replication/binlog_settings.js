@@ -7,8 +7,8 @@
 var WARNING_THRESHOLD=0;
 var TITLE="Expire binlogs";
 var ADVICE_WARNING="You are using more than 80% of the max_connections."
-    " Consider regulating load, e.g by using HAProxy. Using up all connections"
-    " may render the database server unusable.";
+" Consider regulating load, e.g by using HAProxy. Using up all connections"
+" may render the database server unusable.";
 var ADVICE_OK="The percentage of currently used connections is satisfactory." ;
 
 function main()
@@ -31,36 +31,46 @@ function main()
             print("Not connected");
             continue;
         }
-        var logbin = 
-               readVariable(host, "log_bin").toString();
-               
-        severity = Ok;               
-        if (logbin == "ON")
-        {
+        var logbin =
+            host.sqlSystemVariable("log_bin");
 
-            var expire_logs_days = 
-               readVariable(host, "expire_logs_days").toInt();    
-            if ( expire_logs_days == 0 ) 
-            {
-                msg = "Set expire_logs_days in my,cnf."
-                      " Go to Manage -> Configuration -> Change Parameter,"
-                      " and set expire_logs_days=7 in group mysqld.";
-                justification = "expire_logs_days is not set." 
-                  " Set it to e.g expire_logs_days=7 to purge logs older than 7"
-                  " days. Otherwise binary logs will grow forever.";
-                severity = Warning;
-            }
-            else
-            {
-                msg = "No advice, no action needed. expire_logs_days is set.";
-                justification = "expire_logs_days=" + expire_logs_days + ". Setting is ok.";
-            }
+        var expire_logs_days =
+            host.sqlSystemVariable("expire_logs_days");
+
+        severity = Ok;
+        if (logbin.isError() ||
+            expire_logs_days.isError())
+        {
+            msg = "Not enough data to calculate";
+            justification = msg;
+            advice.setSeverity(0);
         }
         else
         {
-            msg = "No advice, no action needed.";
-            justification = "log_bin is not enabled on this server,"
-                            " so advisor does not apply.";
+            if (logbin == "ON")
+            {
+                if ( expire_logs_days.toInt() == 0 )
+                {
+                    msg = "Set expire_logs_days in my,cnf."
+                    " Go to Manage -> Configuration -> Change Parameter,"
+                    " and set expire_logs_days=7 in group mysqld.";
+                    justification = "expire_logs_days is not set."
+                    " Set it to e.g expire_logs_days=7 to purge logs older than 7"
+                    " days. Otherwise binary logs will grow forever.";
+                    severity = Warning;
+                }
+                else
+                {
+                    msg = "No advice, no action needed. expire_logs_days is set.";
+                    justification = "expire_logs_days=" + expire_logs_days + ". Setting is ok.";
+                }
+            }
+            else
+            {
+                msg = "No advice, no action needed.";
+                justification = "log_bin is not enabled on this server,"
+                " so advisor does not apply.";
+            }
         }
         advice.setSeverity(severity);
         advice.setHost(host);
@@ -72,4 +82,5 @@ function main()
     }
     return advisorMap;
 }
+
 

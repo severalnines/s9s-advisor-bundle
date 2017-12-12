@@ -18,6 +18,8 @@ function main()
         origValue.replace('"',"");
         value.replace("'","");
         value.replace("gcomm://","");
+        if (value.contains("?"))
+            value = value.split("?")[0];
         var address = value.split(",");
         var found=true;
         var missingHosts = "";

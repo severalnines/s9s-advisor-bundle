@@ -9,6 +9,11 @@ var ADVICE_WARNING="You are using more than 80% of the max_connections."
     " may render the database server unusable.";
 var ADVICE_OK="The percentage of currently used connections is satisfactory." ;
 
+/*
+ * THIS SCRIPT IS DEPRECTED, SEE binlog_settings.js
+ */
+
+
 function main()
 {
     var hosts     = cluster::mySqlNodes();

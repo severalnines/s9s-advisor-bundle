@@ -2,7 +2,7 @@
 #include "cmon/alarms.h"
 
 var DESCRIPTION="This advisor identifies all users that use a wildcard host from the mysql system table,"
-                " and let you have more control over which hosts are able to connect to the servers.";
+" and let you have more control over which hosts are able to connect to the servers.";
 var TITLE="Access from any host ('%')";
 
 function main()
@@ -22,18 +22,36 @@ function main()
         print("   ");
         print(host);
         print("==========================");
-        count = getSingleValue(host, 
-                               "SELECT COUNT(*) FROM mysql.user"
-                               " WHERE host='%'").toInt();
-        if (count == false)
-            advice.setAdvice("Failed read information from ", host);
+        result = getValueMap(host,
+                             "SELECT user,host FROM mysql.user"
+                             " WHERE host='%'");
+
+
+        if (result == false || result.size() == 0)
+        {
+            advice.setJustification("Did not find any account"
+                                    " allowed to connect from any host ('%').");
+            advice.setAdvice("No advice.");
+            advice.setHost(host);
+            advice.setSeverity(Ok);
+        }
         else
         {
+            count = 0;
+            accounts ="";
+            for (i=0; i<result.size(); ++i)
+            {
+                user = result[i][0];
+                host = result[i][1];
+                accounts = accounts + ("'" + user + "'@'" + host + "'");
+                if (i< (result.size()-1))
+                    accounts += ",";
+                count++;
+            }
             if (count > 0)
             {
-                advice.setJustification("Found " + count + 
-                                        " accounts allowing access"
-                                        " from any host ('%').");
+                advice.setJustification("The following accounts allow access"
+                                        " from any host:" + accounts + ".");
                 advice.setAdvice("Be more precise which hosts are allowed to"
                                  " connect to the MySQL Server.");
                 advice.setSeverity(Warning);

@@ -30,14 +30,13 @@ function main()
             print("Not connected");
             continue;
         }
-        var Max_used_connections = 
-            readStatusVariable(host, "Max_used_connections").toInt();
         
-        var Max_connections = readVariable(host, "Max_connections").toInt();
+        var Max_used_connections = host.sqlStatusVariable("Max_used_connections");
+        var Max_connections   = host.sqlSystemVariable("Max_connections");
         
-        if (Max_used_connections == false ||
-            Max_connections == false)
+        if (Max_used_connections.isError() || Max_connections.isError())
         {
+            justification = "";
             msg = "Not enough data to calculate";
         }
         else
@@ -72,4 +71,5 @@ function main()
     }
     return advisorMap;
 }
+
 

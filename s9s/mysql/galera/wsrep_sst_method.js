@@ -2,7 +2,7 @@
 
 
 var DESCRIPTION="This advisor reads the value of wsrep_sst_method and and notifies you"
-                " if wsrep_sst_xtrabackup-v2 is not installed, which is a recommended SST method for all Galera variants.";
+" if wsrep_sst_xtrabackup-v2 is not installed, which is a recommended SST method for all Galera variants.";
 var WARNING_THRESHOLD=4;
 
 
@@ -16,49 +16,58 @@ function main()
         host        = hosts[idx];
         map         = host.toMap();
         gStatus     = map["galera"]["galerastatus"];
-        
+
         print("   ");
         print(host);
         print("==========================");
-        
+
         if (gStatus!="Primary")
         {
             print("Is not Primary, continuing.");
             continue;
         }
-        var value = readVariable(host, "WSREP_SST_METHOD");
-        if (value == false)
-            continue;
         var msg ="";
         var justification = "";
         var advice = new CmonAdvice();
         advice.setTitle("Wsrep SST method");
         advice.setHost(host);
-        if (value.toString() !="xtrabackup-v2")
+        var value = host.sqlSystemVariable("WSREP_SST_METHOD").toString();
+        if (value.isError() || value == "")
+        {
+            msg = "Not enough data to calculate";
+            advice.setSeverity(Ok);
+            advice.setJustification(msg);
+            advice.setAdvice(msg);
+            advisorMap[idx]= advice;
+            continue;
+        }
+
+        if (value.toString() !="xtrabackup-v2" &&
+            value.toString() !="mariabackup")
         {
             retval = host.system("test -f /usr/bin/wsrep_sst_xtrabackup-v2");
             reply = retval["success"];
             var raiseAlarm = false;
             if (reply)
             {
-               raiseAlarm = true;
-               msg="Use wsrep_sst_method=xtrabackup-v2 instead.";
-               advice.setSeverity(Warning);
+                raiseAlarm = true;
+                msg="Use wsrep_sst_method=xtrabackup-v2 instead.";
+                advice.setSeverity(Warning);
             }
             else
             {
-               msg="/usr/bin/wsrep_sst_xtrabackup-v2 does not exist,"
-                   " so keep the current setting.";
-               advice.setSeverity(Ok);      
+                msg="/usr/bin/wsrep_sst_xtrabackup-v2 does not exist,"
+                " so keep the current setting.";
+                advice.setSeverity(Ok);
             }
             justification = "Current wsrep_sst_method=" + value;
             advice.setJustification(justification);
             if (raiseAlarm)
-                 host.raiseAlarm(MySqlAdvisor, Warning, msg);
+                host.raiseAlarm(MySqlAdvisor, Warning, msg);
         }
         else
         {
-            msg="Using wsrep_sst_method=xtrabackup-v2, so it is good.";
+            msg="Using wsrep_sst_method=" + value + ", so it is good.";
             advice.setSeverity(Ok);
             justification = "Current wsrep_sst_method=" + value;
             advice.setJustification(justification);
@@ -70,4 +79,5 @@ function main()
     }
     return advisorMap;
 }
+
 

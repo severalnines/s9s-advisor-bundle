@@ -1,13 +1,17 @@
-
+#include "common/mysql_helper.js"
+#include "common/helpers.js"
 /**
  * a JS implementation of mysql_secure_installation
+ * passwordless users will be removed when used with STRICT as arg
+ * test database will be removed
+ * anonymous users will be removed
  */
- 
+
 var DESCRIPTION="This advisor runs multiple checks and provides security recommendations based on mysql_secure_installation script.";
 function remove_anonymous_users(host)
 {
     print(host , ": Delete anonymous users.");
-    query = "DELETE FROM mysql.user where User=''";   
+    query = "DELETE FROM mysql.user where User=''";
     retval = host.executeSqlCommand(query);
     if (!retval["success"])
     {
@@ -20,7 +24,11 @@ function remove_anonymous_users(host)
 function remove_users_without_password(host)
 {
     print(host , ": Delete users with no password set.");
-    query = "DELETE FROM mysql.user where Password=''";   
+    if (isMySql57Host(host))
+        query = "DELETE FROM mysql.user where authentication_string=''";
+    else
+        query = "DELETE FROM mysql.user where Password=''";
+
     retval = host.executeSqlCommand(query);
     if (!retval["success"])
     {
@@ -33,7 +41,7 @@ function remove_users_without_password(host)
 function remove_test_database(host)
 {
     print(host , ": Dropping 'test' database (if exists).");
-    query = "DROP DATABASE IF EXISTS test";    
+    query = "DROP DATABASE IF EXISTS test";
     retval = host.executeSqlCommand(query);
     if (!retval["success"])
     {
@@ -83,21 +91,21 @@ function main(mode)
         var error = false;
         if (!connected)
         {
-            print("Instance " + 
-                     host.hostName() + ":" +
-                     host.port() + " is not online");
-            continue;    
+            print("Instance " +
+                  host.hostName() + ":" +
+                  host.port() + " is not online");
+            continue;
         }
         print("Securing instance " + host.hostName() + ":" + host.port());
         if (!remove_anonymous_users(host))
         {
-            print("Instance " + host.hostName() + ":" + host.port() + 
+            print("Instance " + host.hostName() + ":" + host.port() +
                   ": failed to remove empty users.");
             error = true;
         }
         if (!remove_test_database(host))
         {
-            print("Instance " + host.hostName() + ":" + host.port() + 
+            print("Instance " + host.hostName() + ":" + host.port() +
                   ": failed to remove test database.");
             error = true;
         }
@@ -105,28 +113,27 @@ function main(mode)
         {
             if (!remove_users_without_password(host))
             {
-                print("Instance " + host.hostName() + ":" + host.port() + 
+                print("Instance " + host.hostName() + ":" + host.port() +
                       ": failed to relod privileges.");
                 error = true;
             }
         }
         if (!reload_privilege_tables(host))
         {
-            print("Instance " + host.hostName() + ":" + host.port() + 
+            print("Instance " + host.hostName() + ":" + host.port() +
                   ": failed to relod privileges.");
             error = true;
         }
-        
+
         if(error)
-            print("Instance " + host.hostName() + ":" + host.port() + 
-              ": completed with errors. See above.");
+            print("Instance " + host.hostName() + ":" + host.port() +
+                  ": completed with errors. See above.");
         else
-            print("Instance " + host.hostName() + ":" + host.port() + 
-              ": secured installation.");
-              
+            print("Instance " + host.hostName() + ":" + host.port() +
+                  ": secured installation.");
+
         print("======================================");
     }
     return true;
 }
-
 

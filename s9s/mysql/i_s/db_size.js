@@ -22,6 +22,15 @@ query="SELECT CONCAT(table_schema, '.', table_name) tables, "
 
 function main(db, hostAndPort) {
     var hosts = cluster::mySqlNodes();
+    cmonConfig       = conf::values();
+    var exists = cmonConfig.keys().contains("enable_is_queries");    
+    if (exists)     
+        if (!cmonConfig["enable_is_queries"].toBoolean())
+        {
+            print("Information_schema queries are not enabled.");
+            exit(0);
+        }
+    
     for (idx = 0; idx < hosts.size(); ++idx) {
         host = hosts[idx];
         if(!hostMatchesFilter(host,hostAndPort))

@@ -17,23 +17,23 @@ function main()
 {
     var hosts     = cluster::mySqlNodes();
     var advisorMap = {};
-
+    k = 0;
     for (idx = 0; idx < hosts.size(); ++idx)
     {
         host        = hosts[idx];
         map         = host.toMap();
         connected     = map["connected"];
         var advice = new CmonAdvice();
-
+        advice.setHost(host);
+        advice.setTitle(TITLE);
         if(!connected)
             continue;
         if (!readVariable(host, "performance_schema").toBoolean())
         {
-            advice.setHost(host);
-            advice.setTitle(TITLE);
-            advice.setAdvice("Nothing to check.");
-            advice.setJustification("performance_schema is not enabled");
-            advisorMap[idx]= advice;
+            advice.setSeverity(Ok);
+            advice.setAdvice("No advice.");
+            advice.setJustification("performance_schema is not enabled.");
+            advisorMap[k++]= advice;
             print(host, ": performance_schema is not enabled.");
             continue;
         }
@@ -43,24 +43,27 @@ function main()
         if (result == false)
         {
             msg = concatenate(msg, "No unused indexes found on this host.");
-            advice.setJustification(ADVICE_OK);
+            advice.setAdvice(ADVICE_OK);
             advice.setSeverity(Ok);
         }
         else
         {
             for (i=0; i<result.size(); ++i)
             {
-                msg = concatenate(msg, "Unused index found on table ", result[i][0], ".", result[i][1], ": index ", result[i][2], " can be dropped.<br/><br/>");
+                msg = concatenate(msg, "Unused index found on table ", 
+                                  result[i][0], ".", 
+                                  result[i][1], ": index ", 
+                                  result[i][2], " can be dropped.<br/><br/>");
             }
-            advice.setJustification(ADVICE_WARNING);
+            advice.setAdvice(ADVICE_WARNING);
             advice.setSeverity(Warning);
         }
         
         print(msg);
         advice.setHost(host);
         advice.setTitle(TITLE);
-        advice.setAdvice(msg);
-        advisorMap[idx]= advice;
+        advice.setJustification(msg);
+        advisorMap[k++]= advice;
     }
     return advisorMap;
 }

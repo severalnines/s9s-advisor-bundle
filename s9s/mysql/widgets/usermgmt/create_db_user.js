@@ -51,7 +51,7 @@ function main(user, hostname, password, hostAndPort)
         if (isGalera)
         {
             query = "SET WSREP_ON=ON;SET SQL_LOG_BIN=ON;";
-                localState = map["galera"]["localstatusstr"];
+            localState = map["galera"]["localstatusstr"];
             if (localState != "Synced")
                 continue;
         }

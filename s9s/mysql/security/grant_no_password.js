@@ -3,7 +3,7 @@
 #include "cmon/alarms.h"
 
 var DESCRIPTION="This advisor identifies all users who do not have a password in the mysql system table,"
-                " which helps to increase data security.";
+" which helps to increase data security.";
 var TITLE="Check number of accounts without a password";
 
 function main()
@@ -20,29 +20,44 @@ function main()
 
         if (!connected)
             continue;
-            
+
         print("   ");
         print(host);
         print("==========================");
-        var q = "SELECT COUNT(*) FROM mysql.user WHERE password=''";
+        var q = "SELECT user,host FROM mysql.user WHERE password=''";
         if (isMySql57Host(host))
-            q = "SELECT COUNT(*) FROM mysql.user WHERE authentication_string=''";
-            
-        ret = getSingleValue(host, 
-                           q);
-        if (ret == false)
+            q = "SELECT user,host FROM mysql.user WHERE authentication_string=''";
+        if (isMariaDb102Host(host))
+            q = "SELECT user,host FROM mysql.user WHERE password=''";
+
+        ret = getValueMap(host,
+                          q);
+        if (ret == false || ret.size() == 0)
         {
             advice.setJustification("Did not find any account"
                                     " without password.");
             advice.setAdvice("No advice.");
+            advice.setHost(host);
+            advice.setSeverity(Ok);
+
         }
         else
         {
-            count = ret.toInt();
+            count = 0;
+            accounts ="";
+            for (i=0; i<ret.size(); ++i)
+            {
+                user = ret[i][0];
+                host = ret[i][1];
+                accounts = accounts + ("'" + user + "'@'" + host + "'");
+                if (i< (ret.size()-1))
+                    accounts += ",";
+                count++;
+            }
+
             if (count > 0)
             {
-                advice.setJustification("Found " + count + 
-                                        " accounts with no password.");
+                advice.setJustification("The follow accounts does not have a password: " + accounts + ".");
                 advice.setAdvice("You have accounts without a password set."
                                  " Run s9s/mysql/programs/security_audit.js"
                                  " for more details and then"
@@ -65,3 +80,4 @@ function main()
     }
     return advisorMap;
 }
+

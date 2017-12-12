@@ -31,14 +31,13 @@ function main()
             print("Not connected");
             continue;
         }
-        var Threads_connected = 
-            readStatusVariable(host, "Threads_connected").toInt();
-        var Max_connections = 
-            readVariable(host, "Max_connections").toInt();
+
+        var Threads_connected = host.sqlStatusVariable("Threads_connected");
+        var Max_connections   = host.sqlSystemVariable("Max_connections");
         
-        if (Threads_connected == false ||
-            Max_connections == false)
+        if (Threads_connected.isError() || Max_connections.isError())
         {
+            justification = "";
             msg = "Not enough data to calculate";
         }
         else

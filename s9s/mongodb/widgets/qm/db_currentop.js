@@ -25,7 +25,7 @@ function main(hostAndPort) {
         if(host.hostStatus() != "CmonHostOnline")
             continue;
 
-        res= host.executeMongoQuery("{currentOp : 1 }");
+        res= host.executeMongoQuery("admin", "{currentOp : 1 }");
         r = res["result"]["inprog"];
         for(x = 0; x<r.size(); x++) {
             result[k]={};

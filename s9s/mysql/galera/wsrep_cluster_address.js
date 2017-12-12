@@ -2,7 +2,7 @@
 
 
 var DESCRIPTION="This advisor reads the value of wsrep_cluster_address inside each database node's configuration file and"
-                " notifies you if the parameter does not exist, preventing potential catastrophic failure and data loss during service startup.";
+" notifies you if the parameter does not exist, preventing potential catastrophic failure and data loss during service startup.";
 function main()
 {
     var hosts     = cluster::galeraNodes();
@@ -20,14 +20,13 @@ function main()
         var advice = new CmonAdvice();
         advice.setTitle("wsrep_cluster_address check");
         advice.setHost(host);
-        var config      = host.config();
-        var variable = config.variable("wsrep_cluster_address");
-        var value = variable[0]["value"];
-        if (value == #N/A)
+        value =  host.sqlSystemVariable("WSREP_CLUSTER_ADDRESS");
+        if (value.isError())
         {
+            msg = "Not enough data to calculate";
             advice.setSeverity(Ok);
-            advice.setJustification("Could not read the wsrep_cluster_address.");
-            advice.setAdvice("No action needed.");
+            advice.setJustification(msg);
+            advice.setAdvice(msg);
             advisorMap[idx]= advice;
             continue;
         }
@@ -35,6 +34,8 @@ function main()
         origValue.replace('"',"");
         value.replace("'","");
         value.replace("gcomm://","");
+        if (value.contains("?"))
+            value = value.split("?")[0];
         var address = value.split(",");
         var found=true;
         var missingHosts = "";
@@ -44,7 +45,7 @@ function main()
             {
                 found=false;
                 advice.setSeverity(Warning);
-                if(k < hosts.size()-1)  
+                if(k < hosts.size()-1)
                     missingHosts = missingHosts + hosts[k].hostName() + " ";
                 else
                     missingHosts = missingHosts + hosts[k].hostName();
@@ -53,7 +54,7 @@ function main()
         if (found)
         {
             advice.setSeverity(Ok);
-            advice.setJustification("wsrep_cluster_address=" + origValue + 
+            advice.setJustification("wsrep_cluster_address=" + origValue +
                                     " contains all galera nodes.");
             advice.setAdvice("No action needed.");
         }
@@ -67,19 +68,19 @@ function main()
                 advice.setSeverity(Critical);
                 msg = "Set wsrep_cluster_address=gcomm://" + missingHosts;
                 justification = "wsrep_cluster_address=gcomm:// ."
-                    " This can lead to disasters and data loss.";
+                " This can lead to disasters and data loss.";
             }
             else
             {
-                msg = "Add " + missingHosts + 
-                      " to wsrep_cluster_address." + 
-                      " Set wsrep_cluster_address=" + 
+                msg = "Add " + missingHosts +
+                    " to wsrep_cluster_address." +
+                    " Set wsrep_cluster_address=" +
                     origValue + "," +  missingHosts;
-                justification = "wsrep_cluster_address=" + origValue + 
+                justification = "wsrep_cluster_address=" + origValue +
                     " does not contain " + missingHosts;
             }
             advice.setJustification(justification);
-            advice.setAdvice(msg);   
+            advice.setAdvice(msg);
         }
         print(advice.toString("%E"));
         advisorMap[idx]= advice;

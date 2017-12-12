@@ -25,10 +25,12 @@ function main(hostlist, section, key, newValue)
     var hostName = "";
     var msg = "";
     var found;
+    var passed;
     for (i = 0; i < changeHostsArray.size(); i++)
     {
         found = false;
         msg = "";
+        passed = "";
         hostAndPort = changeHostsArray[i];
         hostAndPortArr = hostAndPort.split(":");
         hostName = hostAndPortArr[0];
@@ -162,10 +164,17 @@ function main(hostlist, section, key, newValue)
             result[i]["result"]["errorMessage"] = error;
         }
         else
+        {
+            var job = CmonJob::createImportConfigJob();
+            passed = job.enqueue();
             result[i]["result"]["success"] = true;
+        }
     }
+
     return result;
 }
+
+
 
 
 

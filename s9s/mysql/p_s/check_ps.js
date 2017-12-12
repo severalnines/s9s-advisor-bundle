@@ -36,17 +36,17 @@ function main()
             value.toString() == "0" ||
             value.toString().toUpperCase() == "OFF")
         {
-            msg="Performance Schema is disabled";
+            justification="Performance Schema is disabled";
             advice.setSeverity(Warning);
-            justification = "We recommend you enable performance_schema=ON"
+            msg = "We recommend you enable performance_schema=ON"
                             " in the configuration, Manage -> Configurations.";
             advice.setJustification(justification);
         }
         else
         {
-            msg="Performance Schema is enabled";
+            justification="Performance Schema is enabled";
             advice.setSeverity(Ok);
-            justification = "Current setting is performance_schema=" + value;
+            msg = "Current setting is performance_schema=" + value;
             advice.setJustification(justification);
         }
         advice.setAdvice(msg);

@@ -2,8 +2,8 @@
 #include "common/helpers.js"
 #include "cmon/alarms.h"
 
- 
-query="SELECT user, host FROM mysql.user WHERE user <> 'cmon'";
+
+query="SELECT user, host FROM mysql.user WHERE user <> 'cmon' ORDER BY user";
 
 /*
 * get a list of mysql user and hosts
@@ -12,8 +12,10 @@ query="SELECT user, host FROM mysql.user WHERE user <> 'cmon'";
 function main(hostAndPort)
 {
     var hosts     = cluster::mySqlNodes();
-    var result={};
-    result["dbusers"] = {};
+    var result    = {};
+    var k = 0;
+    var port = '';
+    result["dbusers"] = [];
 
     for (idx = 0; idx < hosts.size(); ++idx)
     {
@@ -24,11 +26,25 @@ function main(hostAndPort)
         connected     = map["connected"];
         if (!connected)
             continue;
+        isGalera  = map["isgalera"];
+
+        if (isGalera)
+        {
+            localState = map["galera"]["localstatusstr"];
+            if (localState != "Synced")
+                continue;
+        }
+        else
+        {
+            isReadOnly = map["readonly"].toBoolean();
+            if (hosts.size()>1 && !isReadOnly.toBoolean())
+            {
+                continue;
+            }
+        }
         ret = getValueMap(host, query);
-        result["dbusers"][idx] = {};
-        result["dbusers"][idx]["host"]={};
-        result["dbusers"][idx]["host"]["hostname"] = host.hostName();
-        result["dbusers"][idx]["host"]["port"] = host.port();
+        port = host.port();
+
         if (ret != false && ret.size() > 0)
         {
             for (i=0; i<ret.size(); ++i)
@@ -37,12 +53,16 @@ function main(hostAndPort)
                 host = ret[i][1];
                 password = ret[i][2];
 
-                result["dbusers"][idx]["host"][i]={};
-                result["dbusers"][idx]["host"][i]["user"]=user;
-                result["dbusers"][idx]["host"][i]["host"]=host;
-                result["dbusers"][idx]["host"][i]["password"]=password;
+                result["dbusers"][k] = {};
+                result["dbusers"][k]["hostname"] = host;
+                result["dbusers"][k]["port"] = port;
+                result["dbusers"][k]["user"] = user;
+                result["dbusers"][k]["password"] = password;
+
+                k++;
             }
         }
+        break;
     }
     print(result);
     exit(result);
