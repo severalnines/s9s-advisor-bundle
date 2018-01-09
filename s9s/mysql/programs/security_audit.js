@@ -1,5 +1,5 @@
 #include "common/mysql_helper.js"
-#include "common/helpers.js
+#include "common/helpers.js"
 #include "cmon/alarms.h"
 
 var DESCRIPTION="This advisor highlights any account that has been allowed to access the database with global host access and"
