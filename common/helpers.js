@@ -55,6 +55,10 @@ function isMySql57Host(host) {
     return isMySqlHost(host) && checkHostVersion(host, '5.7');
 }
 
+function isMySql80Host(host) {
+    return isMySqlHost(host) && checkHostVersion(host, '8.0');
+}
+
 function isMariaDb102Host(host) {
     return isMySqlHost(host) && checkHostVersion(host, '10.2');
 }
