@@ -64,7 +64,6 @@ function main()
             }
             justification = "Current wsrep_sst_method=" + value;
             advice.setJustification(justification);
-
         }
         else
         {
@@ -74,12 +73,28 @@ function main()
             if (sst_method != value) {
                 raiseAlarm = true;
                 msg="The wsrep_sst_method is not the same throughout the cluster "
-		    "and this could lead to incompatible state transfers";
+                "and this could lead to incompatible state transfers.";
                 justification = "Current wsrep_sst_method=" + value;
                 advice.setJustification(justification);
                 advice.setSeverity(Warning); 
             }
             else {
+                if (value == "mariabackup") {
+                    retval = host.system("test -f /usr/bin/mariabackup");
+                    reply = retval["success"];
+                    if (!reply)
+                    {
+                        raiseAlarm = true;
+                        msg="The wsrep_sst_method is set to mariabackup but "
+                        "/usr/bin/mariabackup does not exist. "
+                        "Please install the MariaDB Backup package.";
+                        justification = "Current wsrep_sst_method=" + value;
+                        advice.setJustification(justification);
+                        advice.setSeverity(Warning);
+                    }
+                }
+            }
+            if (!raiseAlarm) {
                 msg="Using wsrep_sst_method=" + value + ", so it is good.";
                 advice.setSeverity(Ok);
                 justification = "Current wsrep_sst_method=" + value;
