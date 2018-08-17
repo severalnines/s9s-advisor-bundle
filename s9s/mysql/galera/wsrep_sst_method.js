@@ -10,7 +10,8 @@ function main()
 {
     var hosts     = cluster::galeraNodes();
     var advisorMap = {};
-
+    var sst_method = "";
+    var alarmMessage;
     for (idx = 0; idx < hosts.size(); idx++)
     {
         host        = hosts[idx];
@@ -29,6 +30,7 @@ function main()
         var msg ="";
         var justification = "";
         var advice = new CmonAdvice();
+        var raiseAlarm = false;
         advice.setTitle("Wsrep SST method");
         advice.setHost(host);
         var value = host.sqlSystemVariable("WSREP_SST_METHOD").toString();
@@ -47,11 +49,11 @@ function main()
         {
             retval = host.system("test -f /usr/bin/wsrep_sst_xtrabackup-v2");
             reply = retval["success"];
-            var raiseAlarm = false;
             if (reply)
             {
                 raiseAlarm = true;
-                msg="Use wsrep_sst_method=xtrabackup-v2 instead.";
+                msg="Use wsrep_sst_method=xtrabackup-v2 or mariabackup"
+                " (for newer version of MariaDb) instead.";
                 advice.setSeverity(Warning);
             }
             else
@@ -62,16 +64,33 @@ function main()
             }
             justification = "Current wsrep_sst_method=" + value;
             advice.setJustification(justification);
-            if (raiseAlarm)
-                host.raiseAlarm(MySqlAdvisor, Warning, msg);
+
         }
         else
         {
-            msg="Using wsrep_sst_method=" + value + ", so it is good.";
-            advice.setSeverity(Ok);
-            justification = "Current wsrep_sst_method=" + value;
-            advice.setJustification(justification);
-            host.clearAlarm(MySqlAdvisor);
+            if (sst_method == "") {
+                sst_method = value;
+            }
+            if (sst_method != value) {
+                raiseAlarm = true;
+                msg="The wsrep_sst_method is not the same throughout the cluster "
+		    "and this could lead to incompatible state transfers";
+                justification = "Current wsrep_sst_method=" + value;
+                advice.setJustification(justification);
+                advice.setSeverity(Warning); 
+            }
+            else {
+                msg="Using wsrep_sst_method=" + value + ", so it is good.";
+                advice.setSeverity(Ok);
+                justification = "Current wsrep_sst_method=" + value;
+                advice.setJustification(justification);
+                host.clearAlarm(MySqlAdvisor);
+            }
+        }
+        if (raiseAlarm)
+        {
+            alarmMessage = justification + "\n" + msg;
+            host.raiseAlarm(MySqlAdvisor, Warning, alarmMessage);
         }
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
@@ -79,5 +98,7 @@ function main()
     }
     return advisorMap;
 }
+
+
 
 
