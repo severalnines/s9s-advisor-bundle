@@ -1,4 +1,6 @@
 #include "common/mysql_helper.js"
+#include "common/helpers.js"
+
 
 /**
  * Checks if binlog expire_logs_days is set if log_bin enabled.
@@ -34,8 +36,13 @@ function main()
         var logbin =
             host.sqlSystemVariable("log_bin");
 
+        var keyName = "expire_logs_days";  
+        if (isMySql80Host(host))
+        {
+            keyName = "binlog_expire_logs_seconds";  
+        }
         var expire_logs_days =
-            host.sqlSystemVariable("expire_logs_days");
+            host.sqlSystemVariable(keyName);
 
         severity = Ok;
         if (logbin.isError() ||
@@ -53,7 +60,7 @@ function main()
                 {
                     msg = "Set expire_logs_days in my,cnf."
                     " Go to Manage -> Configuration -> Change Parameter,"
-                    " and set expire_logs_days=7 in group mysqld.";
+                    " and set '" + keyName  + "=VALUE' in group mysqld.";
                     justification = "expire_logs_days is not set."
                     " Set it to e.g expire_logs_days=7 to purge logs older than 7"
                     " days. Otherwise binary logs will grow forever.";
@@ -61,8 +68,8 @@ function main()
                 }
                 else
                 {
-                    msg = "No advice, no action needed. expire_logs_days is set.";
-                    justification = "expire_logs_days=" + expire_logs_days + ". Setting is ok.";
+                    msg = "No advice, no action needed. " + keyName +  " is set.";
+                    justification = "" +keyName + "=" + expire_logs_days + ". Setting is ok.";
                 }
             }
             else

@@ -41,14 +41,15 @@ function main()
         var missingHosts = "";
         for (k = 0; k < hosts.size(); k++)
         {
-            if (!address.contains(hosts[k].hostName()))
+            if (!address.contains(hosts[k].hostName()) &&
+                !address.contains(hosts[k].internalHostName()))
             {
                 found=false;
                 advice.setSeverity(Warning);
                 if(k < hosts.size()-1)
-                    missingHosts = missingHosts + hosts[k].hostName() + " ";
+                    missingHosts = missingHosts + hosts[k].internalHostName() + " ";
                 else
-                    missingHosts = missingHosts + hosts[k].hostName();
+                    missingHosts = missingHosts + hosts[k].internalHostName();
             }
         }
         if (found)

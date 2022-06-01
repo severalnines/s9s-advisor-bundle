@@ -5,9 +5,7 @@
 accountColNames = "CONCAT(QUOTE(user),'@',QUOTE(host)) UserAccount, User,Host";
 privColNames = "Select_priv,Insert_priv,Update_priv,Delete_priv,Create_priv,Drop_priv,Reload_priv,Shutdown_priv,Process_priv,File_priv,Grant_priv,References_priv,Index_priv,Alter_priv,Show_db_priv,Super_priv,Create_tmp_table_priv,Lock_tables_priv,Execute_priv,Repl_slave_priv,Repl_client_priv,Create_view_priv,Show_view_priv,Create_routine_priv,Alter_routine_priv,Create_user_priv,Event_priv,Trigger_priv,Create_tablespace_priv";
 sslColNames="ssl_type,ssl_cipher,x509_issuer,x509_subject";
-extraColNames="max_questions,max_updates,max_connections,max_user_connections,password_expired";
-
-queryGlobalPrivs="Host,User,Select_priv,Insert_priv,Update_priv,Delete_priv,Create_priv,Drop_priv,Reload_priv,Shutdown_priv,Process_priv,File_priv,Grant_priv,References_priv,Index_priv,Alter_priv,Show_db_priv,Super_priv,Create_tmp_table_priv,Lock_tables_priv,Execute_priv,Repl_slave_priv,Repl_client_priv,Create_view_priv,Show_view_priv,Create_routine_priv,Alter_routine_priv,Create_user_priv,Event_priv,Trigger_priv,Create_tablespace_priv,ssl_type,ssl_cipher,x509_issuer,x509_subject,max_questions,max_updates,max_connections,max_user_connections,plugin,authentication_string,password_expired,password_last_changed,password_lifetime,account_locked";
+extraColNames="max_questions,max_updates,max_connections,max_user_connections";
 
 privs= "(CONCAT("
 "IF(Alter_priv = 'Y', ',ALTER', ''),"
@@ -26,7 +24,7 @@ privs= "(CONCAT("
 "IF(Grant_priv = 'Y', ',GRANT OPTION', ''),"
 "IF(Index_priv = 'Y', ',INDEX', ''),"
 "IF(Insert_priv = 'Y', ',INSERT', ''),"
-"IF(Lock_tables_priv = 'Y', ',LOCK TABLE', ''),"
+"IF(Lock_tables_priv = 'Y', ',LOCK TABLES', ''),"
 "IF(Process_priv = 'Y', ',PROCESS', ''),"
 "IF(References_priv = 'Y', ',REFERENCES', ''),"
 "IF(Reload_priv = 'Y', ',RELOAD', ''),"
@@ -34,7 +32,7 @@ privs= "(CONCAT("
 "IF(Repl_slave_priv = 'Y', ',REPLICATION SLAVE', ''),"
 "IF(Repl_slave_priv = 'Y', ',REPLICATION SLAVE', ''),"
 "IF(Select_priv = 'Y', ',SELECT',''),"
-"IF(Show_db_priv = 'Y', ',SHOW DATABASE',''),"
+"IF(Show_db_priv = 'Y', ',SHOW DATABASES',''),"
 "IF(Show_view_priv = 'Y', ',SHOW VIEW',''),"
 "IF(Shutdown_priv = 'Y', ',SHUTDOWN',''),"
 "IF(Super_priv = 'Y', ',SUPER',''),"
@@ -57,7 +55,7 @@ privsDb= "CONCAT("
 "IF(Grant_priv = 'Y', ',GRANT OPTION', ''),"
 "IF(Index_priv = 'Y', ',INDEX', ''),"
 "IF(Insert_priv = 'Y', ',INSERT', ''),"
-"IF(Lock_tables_priv = 'Y', ',LOCK TABLE', ''),"
+"IF(Lock_tables_priv = 'Y', ',LOCK TABLES', ''),"
 "IF(References_priv = 'Y', ',REFERENCES', ''),"
 "IF(Select_priv = 'Y', ',SELECT',''),"
 "IF(Show_view_priv = 'Y', ',SHOW VIEW',''),"
@@ -75,8 +73,8 @@ privsDb= "CONCAT("
 */
 allGlobalPrivs="ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TABLESPACE,"
 "CREATE TEMPORARY TABLES,CREATE USER,CREATE VIEW,DELETE,DROP,EVENT,EXECUTE,"
-"FILE,GRANT OPTION,INDEX,INSERT,LOCK TABLE,PROCESS,REFERENCES,RELOAD,"
-"REPLICATION CLIENT,REPLICATION SLAVE,REPLICATION SLAVE,SELECT,SHOW DATABASE,"
+"FILE,GRANT OPTION,INDEX,INSERT,LOCK TABLES,PROCESS,REFERENCES,RELOAD,"
+"REPLICATION CLIENT,REPLICATION SLAVE,REPLICATION SLAVE,SELECT,SHOW DATABASES,"
 "SHOW VIEW,SHUTDOWN,SUPER,TRIGGER,UPDATE";
 
 
@@ -228,11 +226,10 @@ function main(mydb, table, user, hostname, hostAndPort)
                     max_updates = resultSet[row,5];
                     max_connections = resultSet[row,6];
                     max_user_connections = resultSet[row,7];
-                    password_expired = resultSet[row,8];
-                    ssl_type = resultSet[row,9];
-                    ssl_cipher = resultSet[row,10];
-                    x509_issuer = resultSet[row,11];
-                    x509_subject = resultSet[row,12];
+                    ssl_type = resultSet[row,8];
+                    ssl_cipher = resultSet[row,9];
+                    x509_issuer = resultSet[row,10];
+                    x509_subject = resultSet[row,11];
                 }
 
 
@@ -256,7 +253,6 @@ function main(mydb, table, user, hostname, hostAndPort)
                     result["accounts"][idx][i]["max_questions"] = max_questions;
                     result["accounts"][idx][i]["max_connections"] = max_connections;
                     result["accounts"][idx][i]["max_user_connections"] = max_user_connections;
-                    result["accounts"][idx][i]["password_expired"] = password_expired;
                     result["accounts"][idx][i]["ssl_type"] = ssl_type;
                     result["accounts"][idx][i]["ssl_cipher"] = ssl_cipher;
                     result["accounts"][idx][i]["x509_issuer"] = x509_issuer;

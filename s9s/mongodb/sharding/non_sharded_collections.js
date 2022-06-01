@@ -33,19 +33,19 @@ function main(hostAndPort) {
         // Find one of the mongo routers and query from there
         if (host.role() == "mongos" && sharded_collections.size() == 0) {
             // First get a list of all sharded collections
-            shres = host.executeMongoQuery("config", '{ aggregate: "collections", pipeline: [{$group: {"_id": "$_id", "count": {$sum: 1}}}]}');
+            shres = host.executeMongoQuery("config", '{ \"aggregate\": "collections", \"pipeline\": [{$group: {"_id": "$_id", "count": {$sum: 1}}}]}');
             for (o = 0; o < shres["result"]["result"].size(); o++) {
                 sharded_collections[shres["result"]["result"][o]["_id"]] = shres["result"]["result"][o]["count"];
             }
 
             //Then get a list of all databases and its collections
-            dbres = host.executeMongoQuery("admin", "{ listDatabases: 1 }");
+            dbres = host.executeMongoQuery("admin", "{ \"listDatabases\": 1 }");
             for (o = 0; o < dbres["result"]["databases"].size(); o++) {
                 dbname = dbres["result"]["databases"][o]["name"];
                 // Exclude the admin and config databases
                 if(dbname != "admin" && dbname != "config") {
                     //Retrieve a list of all collections in this database
-                    colres = host.executeMongoQuery(dbname, "{ listCollections: 1}");
+                    colres = host.executeMongoQuery(dbname, "{ \"listCollections\": 1}");
                     for (c = 0; c < colres["result"]["cursor"]["firstBatch"].size(); c++) {
                         colname = colres["result"]["cursor"]["firstBatch"][c]["name"];
                         if (sharded_collections[dbname + "." + colname] != 1) {

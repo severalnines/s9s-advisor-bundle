@@ -23,14 +23,15 @@ function main()
         print(host);
         print("==========================");
         result = getValueMap(host,
-                             "SELECT user,host FROM mysql.user"
-                             " WHERE host='%'");
-
-
+                             "SELECT user,host, 'MYSQL.USER' FROM mysql.user"
+                             " WHERE host='%' OR user=''"
+                             " UNION ALL SELECT user,host,db FROM mysql.db "
+                             " WHERE host='%' OR user=''");
+        advice.setHost(host);
         if (result == false || result.size() == 0)
         {
             advice.setJustification("Did not find any account"
-                                    " allowed to connect from any host ('%').");
+                                    " allowed to connect from any host ('%') or user ('').");
             advice.setAdvice("No advice.");
             advice.setHost(host);
             advice.setSeverity(Ok);
@@ -43,7 +44,12 @@ function main()
             {
                 user = result[i][0];
                 host = result[i][1];
-                accounts = accounts + ("'" + user + "'@'" + host + "'");
+                db = result[i][2];
+                if (db == "MYSQL.USER")
+                    accounts = accounts + ("'" + user + "'@'" + host + "'");
+                else
+                    accounts = accounts + ("'" + user + "'@'" + host + "' on '" + db + "'");
+
                 if (i< (result.size()-1))
                     accounts += ",";
                 count++;
@@ -63,7 +69,6 @@ function main()
                 advice.setAdvice("No advice.");
                 advice.setSeverity(Ok);
             }
-            advice.setHost(host);
         }
         advice.setTitle(TITLE);
         advisorMap[idx]= advice;
@@ -71,3 +76,4 @@ function main()
     }
     return advisorMap;
 }
+

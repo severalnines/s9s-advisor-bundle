@@ -51,7 +51,7 @@ function main(hostAndPort) {
                         dbName == "lost+found" ||
                         dbName == "ndbinfo")
                         continue;
-                    
+
                     result["schemas"][k] = {};
                     result["schemas"][k]["name"] =  dbName;
                     result["schemas"][k]["hostname"] = host.hostName();
@@ -64,5 +64,36 @@ function main(hostAndPort) {
             print ("Not connected to " + host);
         }
     }
+
+    var pghosts = cluster::postgreSqlNodes();
+    pgquery = "SELECT datname FROM pg_database WHERE datistemplate = false";
+    for (idx = 0; idx < pghosts.size(); ++idx) {
+        host = pghosts[idx];
+        if(hostAndPort != "*" && !hostMatchesFilter(host,hostAndPort))
+            continue;
+
+        map = host.toMap();
+        connected = map["connected"];
+        if (connected) {
+
+            ret = getValueMap(host, pgquery);
+            if (ret != false && ret.size() > 0)
+            {
+
+                for (i=0; i<ret.size(); ++i)
+                {
+                    dbName =  ret[i][0];
+                    result["schemas"][k] = {};
+                    result["schemas"][k]["name"] =  dbName;
+                    result["schemas"][k]["hostname"] = host.hostName();
+                    result["schemas"][k]["port"] = host.port();
+                    k++;
+                }
+            }
+        } else {
+            print ("Not connected to " + host);
+        }
+    }
+
     exit(result);
 }

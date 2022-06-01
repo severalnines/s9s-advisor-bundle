@@ -34,11 +34,11 @@ function main(hostAndPort) {
         host = hosts[i];
 
         if (host.role() == "shardsvr" || host.role() == "configsvr") {
-            res = host.executeMongoQuery("admin", "{isMaster: 1}");
+            res = host.executeMongoQuery("admin", "{\"isMaster\": 1}");
             if (res["result"]["ismaster"] == true) {
                 master_host = host.hostName() + ":" + host.port();
                 optime_master = 0;
-                res = host.executeMongoQuery("admin", "{ replSetGetStatus: 1 }");
+                res = host.executeMongoQuery("admin", "{ \"replSetGetStatus\": 1 }");
                 // Fetch the optime per host
                 for(o = 0; o < res["result"]["members"].size(); o++) {
                     node_status = res["result"]["members"][o];

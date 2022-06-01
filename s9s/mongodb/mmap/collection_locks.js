@@ -32,7 +32,7 @@ function main(hostAndPort) {
         // Find the primary and execute the queries there
         host = hosts[i];
         host_id = host.hostName() + ":" + host.port();
-        res = host.executeMongoQuery("admin", "{serverStatus: 1, network: 0, metrics: 0, wiredTiger: 0, tcmalloc: 0, repl: 0, opcountersRepl: 0, extra_info: 0}");
+        res = host.executeMongoQuery("admin", "{\"serverStatus\": 1, \"network\": 0, \"metrics\": 0, \"wiredTiger\": 0, \"tcmalloc\": 0, \"repl\": 0, \"opcountersRepl\": 0, \"extra_info\": 0}");
         if(res["result"]["storageEngine"]['name'] == "mmapv1") {
             coll_lock_aq_read = int(res["result"]["locks"]["Collection"]["acquireCount"]["r"]["$numberLong"]) + int(res["result"]["locks"]["Collection"]["acquireCount"]["R"]["$numberLong"]);
             coll_lock_aq_write = int(res["result"]["locks"]["Collection"]["acquireCount"]["w"]["$numberLong"]) + int(res["result"]["locks"]["Collection"]["acquireCount"]["W"]["$numberLong"]);

@@ -1,5 +1,5 @@
 #include "common/mysql_helper.js"
-//#include "common/helpers.js"
+#include "common/helpers.js"
 
 
 var DESCRIPTION="This advisor checks the users and passwords from wsrep_sst_auth and"
@@ -27,9 +27,13 @@ function main()
 
     for (idx = 0; idx < hosts.size(); idx++)
     {
+        var advice = new CmonAdvice();
         host        = hosts[idx];
         map         = host.toMap();
         gStatus     = map["galera"]["galerastatus"];
+
+        advice.setTitle("SST Auth Validator");
+        advice.setHost(host);
         
         print("   ");
         print(host);
@@ -37,6 +41,17 @@ function main()
    
         if(host.nodeType() != "galera")
             continue;
+	    if(isMySql80Host(host)) {
+            msg = "Nothing to do.";
+            advice.setSeverity(Ok);
+            justification = "wsrep_sst_auth is not used in PXC 8.0";
+            advice.setJustification(justification);
+            advice.setAdvice(msg);
+            advisorMap[idx]= advice;
+            print(advice.toString("%E"));
+            continue;
+	    }
+            
         var config = host.config();
         var wsrepSstAuth = readRemoteConfigValue(config, "","wsrep_sst_auth");
         var wsrepXtrabackupPass = readRemoteConfigValue(config, "xtrabackup", "password");
@@ -48,9 +63,6 @@ function main()
             wsrepXtrabackupPass == "")
             continue;
         var msg ="";
-        var advice = new CmonAdvice();
-        advice.setTitle("SST Auth Validator");
-        advice.setHost(host);
         justification = "";
         if (wsrepSstMethod.toString() != "xtrabackup" && 
             wsrepSstMethod.toString() != "xtrabackup-v2")

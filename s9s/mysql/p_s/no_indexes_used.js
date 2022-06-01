@@ -1,7 +1,9 @@
 #include "common/mysql_helper.js"
+#include "common/helpers.js"
+
 
 var DESCRIPTION="This advisor selects all tables being accessed without using an index from performance_schema"
-                " to show you where to improve the queries running against these tables.";
+" to show you where to improve the queries running against these tables.";
 var TITLE="Table access without using index";
 var ADVICE_WARNING="There has been access to tables without using an index. Please investigate queries using these tables using a query profiler.";
 var ADVICE_OK="All tables have been accessed using indexes.";
@@ -37,37 +39,46 @@ function main()
             print(host, ": performance_schema is not enabled.");
             continue;
         }
+        if (isMySql55Host(host))
+        {
+            advice.setJustification("´This advisor is not support on MySQL/MariaDb 5.5.");
+            advice.setSeverity(Ok);
+            advice.setAdvice("No advise.");
+            advisorMap[k++]= advice;
+            continue;
+        }
         result = getValueMap(host, query);
         msg = concatenate("Server: ", host, "<br/>");
         msg = concatenate(msg, "------------------------<br/>");
         if (result == false)
         {
-            msg = concatenate(msg, "No tables have been queried without indexes.");
-            advice.setAdvice(ADVICE_OK);
+            msg = concatenate(msg, "Failed to read data from server.");
+            advice.setAdvice("No advise");
             advice.setSeverity(Ok);
+            advice.setJustification(msg);
+            advisorMap[k++]= advice;
+            continue;
         }
         else
         {
             for (i=0; i<result.size(); ++i)
             {
-                msg = concatenate(msg, "Table has been queried without using indexes: ", 
-                                          result[i][0], ".", 
-                                          result[i][1], " with a total of ", 
-                                          result[i][2], " IO operations (", 
-                                          result[i][3], " Read / ", 
-                                          result[i][4]," Write / ", 
-                                          result[i][5], " Delete)<br/><br/>");
+                msg = concatenate(msg, "Table has been queried without using indexes: ",
+                                  result[i][0], ".",
+                                  result[i][1], " with a total of ",
+                                  result[i][2], " IO operations (",
+                                  result[i][3], " Read / ",
+                                  result[i][4]," Write / ",
+                                  result[i][5], " Delete)<br/><br/>");
             }
             advice.setAdvice(ADVICE_WARNING);
             advice.setSeverity(Warning);
         }
-        
         print(msg);
-        advice.setHost(host);
-        advice.setTitle(TITLE);
         advice.setJustification(msg);
         advisorMap[k++]= advice;
     }
     return advisorMap;
 }
+
 

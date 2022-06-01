@@ -1,7 +1,8 @@
 #include "common/mysql_helper.js"
+#include "common/helpers.js"
 
 var DESCRIPTION="This advisor selects the unused existing indexes from performance_schema"
-                " to allow you to remove the unused indexes which improves the schema and overall performance.";
+" to allow you to remove the unused indexes which improves the schema and overall performance.";
 var TITLE="Unused indexes";
 var ADVICE_WARNING="Unused indexes have been found in your cluster. It is advised to drop them.";
 var ADVICE_OK="No unused indexes found.";
@@ -26,6 +27,7 @@ function main()
         var advice = new CmonAdvice();
         advice.setHost(host);
         advice.setTitle(TITLE);
+        count = 0;
         if(!connected)
             continue;
         if (!readVariable(host, "performance_schema").toBoolean())
@@ -37,33 +39,58 @@ function main()
             print(host, ": performance_schema is not enabled.");
             continue;
         }
-        result = getValueMap(host, query);
-        msg = concatenate("Server: ", host, "<br/>");
-        msg = concatenate(msg, "------------------------<br/>");
-        if (result == false)
+        if (isMySql55Host(host))
         {
-            msg = concatenate(msg, "No unused indexes found on this host.");
-            advice.setAdvice(ADVICE_OK);
+            advice.setJustification("´This advisor is not support on MySQL/MariaDb 5.5.");
             advice.setSeverity(Ok);
+            advice.setAdvice("No advise.");
+            advisorMap[k++]= advice;
+            continue;
+        }
+        result = getValueMap(host, query);
+    //    msg = concatenate("Server: ", host, "<br/>");
+     //   msg = concatenate(msg, "------------------------<br/>");
+        if(result == false)
+        {
+            advice.setAdvice("No advise");
+            advice.setSeverity(Ok);
+            advice.setJustification("Failed to read data from server.");
+            advisorMap[k++]= advice;
+            continue;
         }
         else
         {
             for (i=0; i<result.size(); ++i)
             {
-                msg = concatenate(msg, "Unused index found on table ", 
-                                  result[i][0], ".", 
-                                  result[i][1], ": index ", 
-                                  result[i][2], " can be dropped.<br/><br/>");
+                if(isSystemTable(result[i][0]))
+                {
+                    continue;
+                }
+                count++;
+                msg = concatenate(msg, "Unused index found on table '",
+                                  result[i][0], ".",
+                                  result[i][1], "': index '",
+                                  result[i][2], "' should be examined if it can"
+                                  " be dropped.<br/><br/>");
             }
             advice.setAdvice(ADVICE_WARNING);
             advice.setSeverity(Warning);
         }
         
-        print(msg);
-        advice.setHost(host);
-        advice.setTitle(TITLE);
-        advice.setJustification(msg);
+        if(count == 0)
+        {
+            advice.setAdvice("No advise");
+            advice.setSeverity(Ok);
+            advice.setJustification("No unused indexes found.");
+        }
+        else
+        {
+            advice.setJustification(msg);
+        }
+
         advisorMap[k++]= advice;
     }
     return advisorMap;
 }
+
+

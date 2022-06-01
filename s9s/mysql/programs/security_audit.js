@@ -1,5 +1,4 @@
 #include "common/mysql_helper.js"
-#include "common/helpers.js"
 #include "cmon/alarms.h"
 
 var DESCRIPTION="This advisor highlights any account that has been allowed to access the database with global host access and"
@@ -47,16 +46,8 @@ function main()
 
         if (!connected)
             continue;
-        if (isMySql57Host(host) || isMySql80Host(host))
-        {
-            ret = getValueMap(host, 
-                              "SELECT User,Host FROM mysql.user WHERE authentication_string=''");
-        }
-        else
-        {
-            ret = getValueMap(host,
-                              "SELECT User,Host FROM mysql.user WHERE password=''");
-        }
+        ret = getValueMap(host, 
+                          "SELECT User,Host FROM mysql.user WHERE password=''");
         if (ret == false)
             print(host, ": No problem detected.");
         else

@@ -59,8 +59,31 @@ function isMySql80Host(host) {
     return isMySqlHost(host) && checkHostVersion(host, '8.0');
 }
 
+function isMySql55Host(host) {
+    return isMySqlHost(host) && checkHostVersion(host, '5.5');
+}
+
+function isMariaDb100Host(host) {
+    return isMySqlHost(host) && checkHostVersion(host, '10.0');
+}
+
+function isMariaDb101Host(host) {
+    return isMySqlHost(host) && checkHostVersion(host, '10.1');
+}
+
 function isMariaDb102Host(host) {
     return isMySqlHost(host) && checkHostVersion(host, '10.2');
 }
 
+function isMariaDb103Host(host) {
+    return isMySqlHost(host) && checkHostVersion(host, '10.3');
+}
+
+function isMariaDb104Host(host) {
+    return isMySqlHost(host) && checkHostVersion(host, '10.4');
+}
+
+function isMariaDb10xHost(host) {
+    return isMySqlHost(host) && checkHostVersion(host, '10.');
+}
 

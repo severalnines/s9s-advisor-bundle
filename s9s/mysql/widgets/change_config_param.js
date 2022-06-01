@@ -9,6 +9,7 @@ function main(hostlist, section, key, newValue)
 {
     var hosts     = cluster::hosts();
     var result = {};
+    var key = lower(key);
 
     if (hostlist == #N/A ||
         section == #N/A ||
@@ -26,6 +27,10 @@ function main(hostlist, section, key, newValue)
     var msg = "";
     var found;
     var passed;
+    var keyForSetGlobal = "";
+    keyForSetGlobal = key;
+    keyForSetGlobal.replace("loose_", "");
+
     for (i = 0; i < changeHostsArray.size(); i++)
     {
         found = false;
@@ -64,7 +69,7 @@ function main(hostlist, section, key, newValue)
         }
         // a better test is needed here, since what we really want to check
         // is if the host is reachable from ssh.
-/*        if (!connected)
+                /*        if (!connected)
         {
             result[i]["result"]["success"] = false ;
             result[i]["result"]["errorMessage"] = host.hostName() + ":" +
@@ -73,18 +78,19 @@ function main(hostlist, section, key, newValue)
                                                           " Skipping this server";
             continue;
         }
-*/
+                */
         var oldValue = "";
         if (mysqldSection && connected)
         {
-            oldValue = readVariable(host, key);
+
+            oldValue = readVariable(host, keyForSetGlobal);
             if (oldValue  == false)
             {
                 result[i]["result"]["success"] = false ;
                 result[i]["result"]["errorMessage"] = host.hostName() + ":" +
                     host.port() +
                     ": Variable " +
-                    key.toString() +
+                    keyForSetGlobal.toString() +
                     " not found.";
                 continue;
             }
@@ -94,7 +100,7 @@ function main(hostlist, section, key, newValue)
                 result[i]["result"]["errorMessage"] = host.hostName() + ":" +
                     host.port() +
                     ": Ignoring change of " +
-                    key + ", since " +
+                    keyForSetGlobal + ", since " +
                     newValue  +
                     " = (current " +
                     oldValue + ").";
@@ -102,13 +108,24 @@ function main(hostlist, section, key, newValue)
             }
         }
         var setglobal = false;
+                        /*
+        blackListed = isBlackListed(key, newValue);
+        if(blackListed)
+            result[i]["result"]["restartNeeded"] = true;
+                        */
+
         if (mysqldSection && connected)
         {
-            retval = setGlobalVariable(host,key, newValue);
+            retval = setGlobalVariable(host,keyForSetGlobal, newValue);
             if (!retval["success"])
             {
                 errorMsg = retval["errorMessage"].toString();
                 if (errorMsg.contains("read only variable"))
+                {
+                    result[i]["result"]["success"] = true;
+                    result[i]["result"]["restartNeeded"] = true;
+                }
+                else if (errorMsg.contains("Incorrect arguments to SET"))
                 {
                     result[i]["result"]["success"] = true;
                     result[i]["result"]["restartNeeded"] = true;
@@ -121,7 +138,7 @@ function main(hostlist, section, key, newValue)
                     continue;
                 }
             }
-                else
+            else
             {
                 setglobal = true;
             }
@@ -131,7 +148,7 @@ function main(hostlist, section, key, newValue)
             + " and set "
             + key + "=" + newValue  + " in section [" + section  + "].<br/>";
         if (mysqldSection)
-                msg = msg + " Previous value was " + oldValue + ".<br/>";
+            msg = msg + " Previous value was " + oldValue + ".<br/>";
 
         var config      = host.config();
         error  = config.errorMessage();
@@ -174,7 +191,18 @@ function main(hostlist, section, key, newValue)
     return result;
 }
 
+function isBlackListed(key, value)
+{
+    if (key == "wsrep_provider_options")
+    {
+        if (value.contains("gmcast.segment"))
+            return true;
+    }
+    else if (key == "gtid_mode")
+    {
+        return true;
+    }
 
-
-
+    return false;
+}
 

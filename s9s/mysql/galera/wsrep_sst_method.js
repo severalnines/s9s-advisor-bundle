@@ -10,8 +10,7 @@ function main()
 {
     var hosts     = cluster::galeraNodes();
     var advisorMap = {};
-    var sst_method = "";
-    var alarmMessage;
+
     for (idx = 0; idx < hosts.size(); idx++)
     {
         host        = hosts[idx];
@@ -30,7 +29,6 @@ function main()
         var msg ="";
         var justification = "";
         var advice = new CmonAdvice();
-        var raiseAlarm = false;
         advice.setTitle("Wsrep SST method");
         advice.setHost(host);
         var value = host.sqlSystemVariable("WSREP_SST_METHOD").toString();
@@ -49,6 +47,7 @@ function main()
         {
             retval = host.system("test -f /usr/bin/wsrep_sst_xtrabackup-v2");
             reply = retval["success"];
+            var raiseAlarm = false;
             if (reply)
             {
                 raiseAlarm = true;
@@ -64,48 +63,20 @@ function main()
             }
             justification = "Current wsrep_sst_method=" + value;
             advice.setJustification(justification);
+            if (raiseAlarm)
+            {
+                var alarmMessage;
+                alarmMessage = justification + "\n" + msg;
+                host.raiseAlarm(MySqlAdvisor, Warning, alarmMessage);
+            }
         }
         else
         {
-            if (sst_method == "") {
-                sst_method = value;
-            }
-            if (sst_method != value) {
-                raiseAlarm = true;
-                msg="The wsrep_sst_method is not the same throughout the cluster "
-                "and this could lead to incompatible state transfers.";
-                justification = "Current wsrep_sst_method=" + value;
-                advice.setJustification(justification);
-                advice.setSeverity(Warning); 
-            }
-            else {
-                if (value == "mariabackup") {
-                    retval = host.system("test -f /usr/bin/mariabackup");
-                    reply = retval["success"];
-                    if (!reply)
-                    {
-                        raiseAlarm = true;
-                        msg="The wsrep_sst_method is set to mariabackup but "
-                        "/usr/bin/mariabackup does not exist. "
-                        "Please install the MariaDB Backup package.";
-                        justification = "Current wsrep_sst_method=" + value;
-                        advice.setJustification(justification);
-                        advice.setSeverity(Warning);
-                    }
-                }
-            }
-            if (!raiseAlarm) {
-                msg="Using wsrep_sst_method=" + value + ", so it is good.";
-                advice.setSeverity(Ok);
-                justification = "Current wsrep_sst_method=" + value;
-                advice.setJustification(justification);
-                host.clearAlarm(MySqlAdvisor);
-            }
-        }
-        if (raiseAlarm)
-        {
-            alarmMessage = justification + "\n" + msg;
-            host.raiseAlarm(MySqlAdvisor, Warning, alarmMessage);
+            msg="Using wsrep_sst_method=" + value + ", so it is good.";
+            advice.setSeverity(Ok);
+            justification = "Current wsrep_sst_method=" + value;
+            advice.setJustification(justification);
+            host.clearAlarm(MySqlAdvisor);
         }
         advice.setAdvice(msg);
         advisorMap[idx]= advice;
@@ -113,7 +84,6 @@ function main()
     }
     return advisorMap;
 }
-
 
 
 

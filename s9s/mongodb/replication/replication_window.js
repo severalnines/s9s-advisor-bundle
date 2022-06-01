@@ -44,7 +44,7 @@ function main(hostAndPort) {
             replwindow_per_node[host_id] = getReplicationWindow(host);
 
             // Only retrieve the replication status from the master
-            res = host.executeMongoQuery("admin", "{isMaster: 1}");
+            res = host.executeMongoQuery("admin", "{\"isMaster\": 1}");
             if (res["result"]["ismaster"] == true) {
                 var tmp = getReplicationStatus(host, host_id);
                 for(o=0; o < tmp.size(); o++) {
@@ -115,7 +115,7 @@ function main(hostAndPort) {
 
 function getReplicationStatus(host, primary_id) {
     var node_status = {};
-    var res = host.executeMongoQuery("admin", "{ replSetGetStatus: 1 }");
+    var res = host.executeMongoQuery("admin", "{ \"replSetGetStatus\": 1 }");
     // Fetch the optime and uptime per host
     for(i = 0; i < res["result"]["members"].size(); i++)
     {
@@ -134,12 +134,12 @@ function getReplicationWindow(host) {
   var replwindow = {};
   replwindow['newset'] = false;
   // Fetch the first and last record from the Oplog and take it's timestamp
-  var res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: 1}, limit: 1}');
+  var res = host.executeMongoQuery("local", '{\"find\": "oplog.rs", \"sort\": { $natural: 1}, \"limit\": 1}');
   replwindow['first'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
   if (res["result"]["cursor"]["firstBatch"][0]["o"]["msg"] == "initiating set") {
       replwindow['newset'] = true;
   }
-  res = host.executeMongoQuery("local", '{find: "oplog.rs", sort: { $natural: -1}, limit: 1}');
+  res = host.executeMongoQuery("local", '{\"find\": "oplog.rs", \"sort\": { $natural: -1}, \"limit\": 1}');
   replwindow['last'] = res["result"]["cursor"]["firstBatch"][0]["ts"]["$timestamp"]["t"];
   replwindow['replwindow'] = replwindow['last'] - replwindow['first'];
   return replwindow;

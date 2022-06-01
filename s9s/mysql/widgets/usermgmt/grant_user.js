@@ -52,9 +52,9 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
     {
 
         host = hosts[idx];
-//        if(!hostMatchesFilter(host,hostAndPort)){
-//            continue;
-//        }
+        //        if(!hostMatchesFilter(host,hostAndPort)){
+        //            continue;
+        //        }
 
         map = host.toMap();
         connected = map["connected"];
@@ -76,49 +76,22 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
             isReadOnly = map["readonly"].toBoolean();
             if (isReadOnly)
             {
-           //     print(host, "is not a master");
+                //     print(host, "is not a master");
                 continue;
             }
             query = "SET SQL_LOG_BIN=ON;";
             retval2 = executeSqlCommand2(host, query);
         }
-        if (db == "*.*")
-        {
-            allGlobalPrivs = "ALTER,ALTER ROUTINE,CREATE,CREATE ROUTINE,CREATE TABLESPACE,"
-           "CREATE TEMPORARY TABLES,CREATE USER,CREATE VIEW,DELETE,DROP,"
-           "EVENT,EXECUTE,FILE,INDEX,INSERT,LOCK TABLES,PROCESS,REFERENCES,"
-           "RELOAD,REPLICATION CLIENT,REPLICATION SLAVE,SELECT,SHOW DATABASES,"
-           "SHOW VIEW,SHUTDOWN,SUPER,TRIGGER,UPDATE";
-
-           var x = allGlobalPrivs.split(",");
-           var revokeList = "";
-           for (i=0; i<x.size() ; i++)
-           {
-               if(!privs.contains(x[i]))
-                  revokeList += x[i] + ",";
-           }
-           query = "REVOKE " + revokeList + " GRANT OPTION"
-                  + " ON *.* FROM '" + user + "'@'"
-                  + hostname + "'";
-
-        }
-        else
-            query = "REVOKE ALL PRIVILEGES, GRANT OPTION"
-                  + " ON " + db
-                  + " FROM '" + user + "'@'"
-                  + hostname + "'";
-        print (query);
-        retval2 = executeSqlCommand2(host, query);
 
         xtraOpts = xtraOpts.toString().trim();
 
         // For MySQL 5.7 only
-        if(isMySql57Host(host)) {
+        if(isMySql57Host(host) || isMySql80Host(host)) {
             var doAlter = false;
 
             query = "GRANT " + privs + " ON " + db
-              + " TO '" + user + "'@'"
-              + hostname + "'";
+                + " TO '" + user + "'@'"
+                + hostname + "'";
 
             if(xtraOpts.length() > 0) {
                 if(xtraOpts == 'WITH GRANT OPTION') {
@@ -145,16 +118,16 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
         // For other MySQL versions
         else {
             query = "GRANT " + privs + " ON " + db
-              + " TO '" + user + "'@'"
-              + hostname + "' "+ xtraOpts;
-              print("query: ",query);
-              retval2 = executeSqlCommand2(host, query);
+                + " TO '" + user + "'@'"
+                + hostname + "' "+ xtraOpts;
+            print("query: ",query);
+            retval2 = executeSqlCommand2(host, query);
         }
 
         if (!retval["success"]) {
             result["error_msg"] = retval2["errorMessage"];
         } else {
-           result["error_msg"] = "Successfully created: '" + user + "'@'" + hostname + "'";
+            result["error_msg"] = "Successfully created: '" + user + "'@'" + hostname + "'";
         }
 
         if (isGalera)
@@ -167,6 +140,6 @@ function main(user, hostname, privs, db, xtraOpts, hostAndPort)
         }
 
         break;
-     }
-     exit(result);
+    }
+    exit(result);
 }

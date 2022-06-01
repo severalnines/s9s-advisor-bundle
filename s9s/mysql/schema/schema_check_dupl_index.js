@@ -3,14 +3,25 @@
 
 var DESCRIPTION="This advisor identifies tables that have no explicit primary keys from the information_schema,"
 " which is important to have as a unique identifier for each row in a dataset.";
-var query1= "SELECT DISTINCT t.table_schema, t.table_name, t.engine"
-" FROM information_schema.tables AS t"
-" LEFT JOIN information_schema.columns AS c ON "
-" t.table_schema = c.table_schema AND "
-" t.table_name = c.table_name AND c.column_key = 'PRI'"
-" WHERE t.table_schema "
-" NOT IN ('information_schema', 'mysql', 'performance_schema','ndbinfo','sys')"
-" AND c.table_name IS NULL AND t.table_type != 'VIEW'";
+
+
+var query1=
+    "SELECT * FROM "
+"(SELECT TABLE_SCHEMA, TABLE_NAME, INDEX_NAME as REDUNDANT_INDEX,"
+" GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS redundant_columns"
+" FROM information_schema.STATISTICS"
+" WHERE TABLE_SCHEMA NOT IN ('information_schema', 'mysql',"
+" 'performance_schema','ndbinfo','sys')"
+" AND NON_UNIQUE = 1 AND INDEX_TYPE='BTREE'"
+" GROUP BY TABLE_SCHEMA, TABLE_NAME, INDEX_NAME ) AS i1"
+" INNER JOIN (SELECT TABLE_SCHEMA, TABLE_NAME, INDEX_NAME,"
+" GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS columns"
+" FROM information_schema.STATISTICS"
+" WHERE INDEX_TYPE='BTREE'"
+" GROUP BY TABLE_SCHEMA, TABLE_NAME, INDEX_NAME ) AS i2"
+" USING (TABLE_SCHEMA, TABLE_NAME)"
+" WHERE i1.redundant_columns != i2.columns"
+" AND LOCATE(CONCAT(i1.redundant_columns, ','), i2.columns) = 1";
 
 var query2="SELECT count(table_name)"
 " FROM information_schema.tables"
@@ -29,8 +40,7 @@ function main()
      */
 
     var advice = new CmonAdvice();
-    advice.setTitle("Tables without PRIMARY KEY");
-
+    advice.setTitle("Tables with duplicate indexes");
     cmonConfig       = conf::values();
     var exists = cmonConfig.keys().contains("enable_is_queries");
 
@@ -44,7 +54,6 @@ function main()
         advisorMap[0]= advice;
         return advisorMap;
     }
-
 
     var foundNoPK = false;
     for (idx = 0; idx < hosts.size(); idx++)
@@ -77,12 +86,12 @@ function main()
         ret = getValueMap(host, query1);
         if(ret == false || ret.size() == 0)
         {
-            advice.setAdvice("Nothing to do. All tables have a PRIMARY KEY");
+            advice.setAdvice("Nothing to do.");
             advice.setSeverity(Ok);
-            advice.setJustification("All tables have a PRIMARY KEY");
+            advice.setJustification("No duplicate indexes found.");
             advisorMap[idx]= advice;
             print(advice.toString("%E"));
-            host.clearAlarm(MySqlTableAnalyzer);
+            host.clearAlarm(MySqlIndexAnalyzer);
 
             if (ANALYZE_ALL_HOSTS)
                 continue;
@@ -93,7 +102,7 @@ function main()
         print("<table>");
         print("<tr><td width=20%>Table Name</td>"
               "<td width=20%>Schema</td>"
-              "<td width=10%>Engine</td></tr>");
+              "<td width=10%>Redundant index</td></tr>");
 
         for(i=0; i<ret.size(); ++i)
         {
@@ -110,22 +119,28 @@ function main()
         for(i=0; i<ret.size(); ++i)
         {
             if( ret[i][0] != "")
+            {
                 justification = justification +  " " + ret[i][0]  + "." + ret[i][1];
+                if (i<ret.size()-1)
+                    justification = justification +  ",";
+            }
         }
         if( foundNoPK )
         {
-            justification = justification + "' do not have a PRIMARY KEY.";
-            advice.setAdvice("Add a PRIMARY KEY. Plan this operation carefully.");
+            justification = justification + "' has redundant indexes.";
+            advice.setAdvice("Duplicate indexes use more spaces and may"
+                             " slow down writes. Plan carefully if you want to"
+                             " remove duplicate indexes.");
             advice.setSeverity(Warning);
             advice.setJustification(justification);
-            host.raiseAlarm(MySqlTableAnalyzer, Warning, justification);
+            host.raiseAlarm(MySqlIndexAnalyzer, Warning, justification);
 
         }
         else
         {
-            advice.setAdvice("Nothing to do. All tables have a PRIMARY KEY");
+            advice.setAdvice("Nothing to do.");
             advice.setSeverity(Ok);
-            advice.setJustification("All tables have a PRIMARY KEY");
+            advice.setJustification("No duplicate indexes found.");
         }
         advisorMap[idx]= advice;
         print(advice.toString("%E"));
@@ -135,4 +150,3 @@ function main()
     }
     return advisorMap;
 }
-

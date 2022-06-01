@@ -14,7 +14,7 @@ var DESCRIPTION="This advisor provides a snapshot of your database by selecting"
                 " index ratio per database object from information_schema.";
 
 query="SELECT CONCAT(table_schema, '.', table_name) tables, "
-"CONCAT(ROUND(table_rows / 1000000, 2), 'M') rows,CONCAT(ROUND(data_length / ( 1024 * 1024 ), 2), 'M') DATA, "
+"CONCAT(ROUND(table_rows / 1000000, 2), 'M') no_rows,CONCAT(ROUND(data_length / ( 1024 * 1024 ), 2), 'M') DATA, "
 "CONCAT(ROUND(index_length / ( 1024 * 1024 ), 2), 'M') idx, "
 "CONCAT(ROUND(( data_length + index_length ) / ( 1024 * 1024 ), 2), 'M') total_size, "
 "ROUND(index_length / data_length, 2) idxfrac "

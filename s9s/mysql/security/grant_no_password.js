@@ -4,7 +4,7 @@
 
 var DESCRIPTION="This advisor identifies all users who do not have a password in the mysql system table,"
 " which helps to increase data security.";
-var TITLE="Check number of accounts without a password";
+var TITLE="Check db accounts without a password";
 
 function main()
 {
@@ -25,13 +25,16 @@ function main()
         print(host);
         print("==========================");
         var q = "SELECT user,host FROM mysql.user WHERE password=''";
-        if (isMySql57Host(host))
+        if (isMySql57Host(host) || isMySql80Host(host))
             q = "SELECT user,host FROM mysql.user WHERE authentication_string=''";
-        if (isMariaDb102Host(host))
-            q = "SELECT user,host FROM mysql.user WHERE password=''";
-
+        if (isMariaDb10xHost(host))
+            q = "SELECT user,host FROM mysql.user WHERE (password='' && authentication_string='')";
+        
         ret = getValueMap(host,
                           q);
+
+        advice.setHost(host);
+
         if (ret == false || ret.size() == 0)
         {
             advice.setJustification("Did not find any account"
@@ -71,7 +74,6 @@ function main()
                 advice.setAdvice("No advice.");
                 advice.setSeverity(Ok);
             }
-            advice.setHost(host);
         }
         advice.setTitle(TITLE);
         advisorMap[idx]= advice;
@@ -80,4 +82,3 @@ function main()
     }
     return advisorMap;
 }
-

@@ -166,11 +166,11 @@ function checkPrecond(host)
 
 function setGlobalVariable(host, variable, value)
 {
-    if (value.looksInteger() || value.looksULongLong())
+    if (value.looksInteger() || value.looksULongLong() || value.looksDouble())
         _query = "SET GLOBAL " + variable + "=" + value;
     else
         _query = "SET GLOBAL " + variable + "='" + value + "'";
-
+    
     return executeSqlCommand2(host,_query);
 }
 
@@ -180,3 +180,11 @@ function mySleep(host, time)
     return executeSqlCommand(host, _query);
 }
 
+function isSystemTable(value) {
+    if (value == "performance_schema" ||
+        value == "information_schema" ||
+        value == "mysql" ||
+        value == "sys")
+        return true;
+    return false;
+}
